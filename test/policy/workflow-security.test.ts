@@ -79,6 +79,16 @@ describe("workflow supply-chain policy", () => {
     }
   });
 
+  it("installs the pinned VHS executable before every full verification", () => {
+    for (const name of ["ci.yml", "release.yml"]) {
+      const contents = workflow(name);
+      const install = contents.indexOf("- name: Install pinned VHS");
+      const verify = contents.indexOf("- run: npm run verify");
+      expect(install, name).toBeGreaterThan(-1);
+      expect(verify, name).toBeGreaterThan(install);
+    }
+  });
+
   it("keeps security review and dependency updates enabled", async () => {
     expect(workflow("dependency-review.yml")).toContain("fail-on-severity: moderate");
     expect(workflow("codeql.yml")).toContain("queries: security-and-quality");

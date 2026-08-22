@@ -2,7 +2,7 @@
   "name": "vhs",
   "displayName": "VHS",
   "description": "Language support for VHS tape files in Visual Studio Code",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "publisher": "willibrandon",
   "author": {
