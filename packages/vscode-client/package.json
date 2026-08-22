@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/common.ts" },
+  "exports": {
+    ".": "./src/common.ts"
+  },
   "dependencies": {
     "@vhs/language-core": "0.1.0",
     "@vhs/language-server": "0.1.0"

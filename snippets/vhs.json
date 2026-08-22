@@ -1,0 +1,39 @@
+{
+  "Basic GIF tape": {
+    "prefix": "vhs-basic",
+    "body": [
+      "Output \"${1:demo.gif}\"",
+      "",
+      "Set Shell ${2|bash,zsh,fish,pwsh,nu|}",
+      "Set FontSize ${3:22}",
+      "Set Width ${4:1200}",
+      "Set Height ${5:600}",
+      "Set TypingSpeed ${6:50ms}",
+      "",
+      "Type \"${7:echo Hello, VHS!}\"",
+      "Enter",
+      "Sleep ${8:2s}"
+    ],
+    "description": "Create a complete VHS tape that renders a GIF."
+  },
+  "Wait for terminal output": {
+    "prefix": "vhs-wait",
+    "body": ["Wait+${1|Line,Screen|}@${2:15s} /${3:pattern}/"],
+    "description": "Wait for matching terminal output."
+  },
+  "Custom theme": {
+    "prefix": "vhs-theme-json",
+    "body": ["Set Theme {\"background\": \"${1:#171717}\", \"foreground\": \"${2:#f5f1e8}\", \"cursor\": \"${3:#f0b429}\"}"],
+    "description": "Set a custom terminal color theme."
+  },
+  "Source tape": {
+    "prefix": "vhs-source",
+    "body": ["Source \"${1:setup.tape}\""],
+    "description": "Include commands from another tape."
+  },
+  "Screenshot": {
+    "prefix": "vhs-screenshot",
+    "body": ["Screenshot \"${1:screenshot.png}\""],
+    "description": "Capture the next rendered frame."
+  }
+}

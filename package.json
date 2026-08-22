@@ -5,18 +5,36 @@
   "version": "0.1.0",
   "license": "MIT",
   "publisher": "willibrandon",
-  "author": { "name": "Brandon Williams" },
+  "author": {
+    "name": "Brandon Williams"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/willibrandon/vscode-vhs.git"
   },
-  "bugs": { "url": "https://github.com/willibrandon/vscode-vhs/issues" },
+  "bugs": {
+    "url": "https://github.com/willibrandon/vscode-vhs/issues"
+  },
   "homepage": "https://willibrandon.github.io/vscode-vhs/",
   "icon": "media/icon.png",
-  "categories": ["Programming Languages", "Linters", "Formatters", "Visualization"],
-  "keywords": ["vhs", "tape", "terminal", "recording", "gif", "charmbracelet"],
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Formatters",
+    "Visualization"
+  ],
+  "keywords": [
+    "vhs",
+    "tape",
+    "terminal",
+    "recording",
+    "gif",
+    "charmbracelet"
+  ],
   "packageManager": "npm@12.0.2",
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "files": [
     "dist/browser.js",
     "dist/browserServer.js",
@@ -40,7 +58,10 @@
   },
   "main": "./dist/extension.cjs",
   "browser": "./dist/browser.js",
-  "extensionKind": ["workspace", "ui"],
+  "extensionKind": [
+    "workspace",
+    "ui"
+  ],
   "capabilities": {
     "virtualWorkspaces": {
       "supported": true,
@@ -59,8 +80,14 @@
     "languages": [
       {
         "id": "vhs",
-        "aliases": ["VHS", "VHS Tape", "tape"],
-        "extensions": [".tape"],
+        "aliases": [
+          "VHS",
+          "VHS Tape",
+          "tape"
+        ],
+        "extensions": [
+          ".tape"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -73,31 +100,101 @@
       {
         "scopeName": "source.vhs.markdown",
         "path": "./syntaxes/vhs-markdown.tmLanguage.json",
-        "injectTo": ["text.html.markdown"]
+        "injectTo": [
+          "text.html.markdown"
+        ]
       }
     ],
-    "snippets": [{ "language": "vhs", "path": "./snippets/vhs.json" }],
+    "snippets": [
+      {
+        "language": "vhs",
+        "path": "./snippets/vhs.json"
+      }
+    ],
     "commands": [
-      { "command": "vhs.runTape", "title": "Run Tape", "category": "VHS", "icon": "$(play)" },
-      { "command": "vhs.runAndPreview", "title": "Run and Preview", "category": "VHS", "icon": "$(open-preview)" },
-      { "command": "vhs.openPreview", "title": "Open Preview", "category": "VHS" },
-      { "command": "vhs.stopTape", "title": "Stop Tape", "category": "VHS", "icon": "$(debug-stop)" },
-      { "command": "vhs.validateWithInstalledVhs", "title": "Validate with Installed VHS", "category": "VHS" },
-      { "command": "vhs.openDocumentation", "title": "Open Documentation", "category": "VHS" },
-      { "command": "vhs.restartLanguageServer", "title": "Restart Language Server", "category": "VHS" },
-      { "command": "vhs.showLanguageServerOutput", "title": "Show Language Server Output", "category": "VHS" },
-      { "command": "vhs.showRunOutput", "title": "Show Run Output", "category": "VHS" }
+      {
+        "command": "vhs.runTape",
+        "title": "Run Tape",
+        "category": "VHS",
+        "icon": "$(play)"
+      },
+      {
+        "command": "vhs.runAndPreview",
+        "title": "Run and Preview",
+        "category": "VHS",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "vhs.openPreview",
+        "title": "Open Preview",
+        "category": "VHS"
+      },
+      {
+        "command": "vhs.stopTape",
+        "title": "Stop Tape",
+        "category": "VHS",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "vhs.validateWithInstalledVhs",
+        "title": "Validate with Installed VHS",
+        "category": "VHS"
+      },
+      {
+        "command": "vhs.openDocumentation",
+        "title": "Open Documentation",
+        "category": "VHS"
+      },
+      {
+        "command": "vhs.restartLanguageServer",
+        "title": "Restart Language Server",
+        "category": "VHS"
+      },
+      {
+        "command": "vhs.showLanguageServerOutput",
+        "title": "Show Language Server Output",
+        "category": "VHS"
+      },
+      {
+        "command": "vhs.showRunOutput",
+        "title": "Show Run Output",
+        "category": "VHS"
+      }
     ],
     "menus": {
       "editor/title": [
-        { "command": "vhs.runTape", "when": "editorLangId == vhs", "group": "navigation@10" },
-        { "command": "vhs.runAndPreview", "when": "editorLangId == vhs", "group": "navigation@11" },
-        { "command": "vhs.stopTape", "when": "editorLangId == vhs && vhs.running", "group": "navigation@12" }
+        {
+          "command": "vhs.runTape",
+          "when": "editorLangId == vhs",
+          "group": "navigation@10"
+        },
+        {
+          "command": "vhs.runAndPreview",
+          "when": "editorLangId == vhs",
+          "group": "navigation@11"
+        },
+        {
+          "command": "vhs.stopTape",
+          "when": "editorLangId == vhs && vhs.running",
+          "group": "navigation@12"
+        }
       ],
       "editor/context": [
-        { "command": "vhs.runTape", "when": "editorLangId == vhs", "group": "vhs@1" },
-        { "command": "vhs.runAndPreview", "when": "editorLangId == vhs", "group": "vhs@2" },
-        { "command": "vhs.validateWithInstalledVhs", "when": "editorLangId == vhs", "group": "vhs@3" }
+        {
+          "command": "vhs.runTape",
+          "when": "editorLangId == vhs",
+          "group": "vhs@1"
+        },
+        {
+          "command": "vhs.runAndPreview",
+          "when": "editorLangId == vhs",
+          "group": "vhs@2"
+        },
+        {
+          "command": "vhs.validateWithInstalledVhs",
+          "when": "editorLangId == vhs",
+          "group": "vhs@3"
+        }
       ]
     },
     "configuration": {
@@ -127,7 +224,10 @@
         "vhs.externalValidation.mode": {
           "type": "string",
           "default": "off",
-          "enum": ["off", "onSave"],
+          "enum": [
+            "off",
+            "onSave"
+          ],
           "scope": "resource",
           "description": "Run vhs validate after saving a trusted tape."
         },
@@ -146,7 +246,11 @@
         "vhs.trace.server": {
           "type": "string",
           "default": "off",
-          "enum": ["off", "messages", "verbose"],
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
           "scope": "window",
           "description": "Language server protocol tracing."
         }
@@ -155,6 +259,7 @@
   },
   "scripts": {
     "clean": "node ./scripts/clean.mjs",
+    "fixtures:upstream": "node ./scripts/sync-upstream-data.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings 0",

@@ -5,6 +5,6 @@
     "outDir": "lib",
     "tsBuildInfoFile": "../../node_modules/.cache/language-server.tsbuildinfo"
   },
-  "include": ["src/server.ts"],
+  "include": ["src/server.ts", "src/workspace-index.ts"],
   "references": [{ "path": "../language-core" }]
 }

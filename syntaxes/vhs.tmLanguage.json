@@ -1,0 +1,143 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "VHS",
+  "scopeName": "source.vhs",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#set" },
+    { "include": "#env" },
+    { "include": "#wait" },
+    { "include": "#modifiers" },
+    { "include": "#commands" },
+    { "include": "#strings" },
+    { "include": "#regex" },
+    { "include": "#json" },
+    { "include": "#duration" },
+    { "include": "#numbers" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.vhs",
+          "begin": "#",
+          "beginCaptures": { "0": { "name": "punctuation.definition.comment.vhs" } },
+          "end": "$"
+        }
+      ]
+    },
+    "set": {
+      "patterns": [
+        {
+          "match": "\\b(Set)\\s+(Shell|FontFamily|MarginFill|Margin|WindowBar|WindowBarSize|BorderRadius|FontSize|Framerate|Height|LetterSpacing|LineHeight|PlaybackSpeed|TypingSpeed|Padding|Theme|Width|LoopOffset|WaitTimeout|WaitPattern|CursorBlink)\\b",
+          "captures": {
+            "1": { "name": "keyword.control.vhs" },
+            "2": { "name": "support.type.property-name.vhs" }
+          }
+        }
+      ]
+    },
+    "env": {
+      "patterns": [
+        {
+          "match": "\\b(Env)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": { "name": "keyword.control.vhs" },
+            "2": { "name": "variable.other.environment.vhs" }
+          }
+        }
+      ]
+    },
+    "wait": {
+      "patterns": [
+        {
+          "match": "\\b(Wait)(?:\\+(Line|Screen))?",
+          "captures": {
+            "1": { "name": "keyword.control.vhs" },
+            "2": { "name": "constant.language.vhs" }
+          }
+        }
+      ]
+    },
+    "modifiers": {
+      "patterns": [
+        {
+          "match": "\\b(Ctrl|Alt|Shift)(?=\\+)",
+          "name": "storage.modifier.vhs"
+        },
+        {
+          "match": "\\+",
+          "name": "keyword.operator.vhs"
+        }
+      ]
+    },
+    "commands": {
+      "patterns": [
+        {
+          "match": "\\b(Set|Sleep|Type|Enter|Space|Backspace|Delete|Insert|Ctrl|Alt|Shift|Down|Left|Right|Up|PageUp|PageDown|ScrollUp|ScrollDown|Tab|Escape|Hide|Require|Show|Output|Wait|Source|Screenshot|Copy|Paste|Env)\\b",
+          "name": "keyword.control.vhs"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.vhs",
+          "begin": "\"",
+          "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.vhs" } },
+          "end": "\"|$",
+          "endCaptures": { "0": { "name": "punctuation.definition.string.end.vhs" } }
+        },
+        {
+          "name": "string.quoted.single.vhs",
+          "begin": "'",
+          "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.vhs" } },
+          "end": "'|$",
+          "endCaptures": { "0": { "name": "punctuation.definition.string.end.vhs" } }
+        },
+        {
+          "name": "string.quoted.other.vhs",
+          "begin": "`",
+          "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.vhs" } },
+          "end": "`|$",
+          "endCaptures": { "0": { "name": "punctuation.definition.string.end.vhs" } }
+        }
+      ]
+    },
+    "regex": {
+      "patterns": [
+        {
+          "name": "string.regexp.vhs",
+          "begin": "/",
+          "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.vhs" } },
+          "end": "(?<!\\\\)(?:\\\\\\\\)*/|$",
+          "endCaptures": { "0": { "name": "punctuation.definition.string.end.vhs" } },
+          "patterns": [
+            { "match": "\\\\.", "name": "constant.character.escape.vhs" },
+            { "match": "[.*+?^$|]", "name": "keyword.operator.quantifier.regexp.vhs" }
+          ]
+        }
+      ]
+    },
+    "json": {
+      "patterns": [
+        {
+          "name": "meta.embedded.block.json.vhs",
+          "begin": "\\{",
+          "end": "\\}",
+          "patterns": [{ "include": "source.json" }]
+        }
+      ]
+    },
+    "duration": {
+      "patterns": [
+        { "match": "@", "name": "keyword.operator.speed.vhs" },
+        { "match": "(?<=\\d)(ms|s|m)\\b", "name": "keyword.other.unit.vhs" },
+        { "match": "(?<=\\d)(px|em|%)\\b", "name": "keyword.other.unit.vhs" }
+      ]
+    },
+    "numbers": {
+      "patterns": [{ "match": "(?<![A-Za-z0-9_.-])-?\\d+(?:\\.\\d+)?(?![\\d.])", "name": "constant.numeric.vhs" }]
+    }
+  }
+}

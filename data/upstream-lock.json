@@ -1,0 +1,11 @@
+{
+  "vhs": {
+    "repository": "https://github.com/charmbracelet/vhs.git",
+    "version": "v0.11.0",
+    "commit": "c6af91a25fed05852338a5ed58d9b099b8369a1e"
+  },
+  "treeSitterVhs": {
+    "repository": "https://github.com/charmbracelet/tree-sitter-vhs.git",
+    "commit": "0c6fae9d2cfc5b217bfd1fe84a7678f5917116db"
+  }
+}

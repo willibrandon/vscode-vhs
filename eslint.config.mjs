@@ -22,7 +22,10 @@ export default tseslint.config(
   {
     files: ["**/*.{ts,mts}"],
     languageOptions: {
-      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+      parserOptions: {
+        projectService: { allowDefaultProject: ["*.mts"] },
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
     rules: {
       "@typescript-eslint/array-type": ["error", { default: "array" }],
@@ -61,7 +64,7 @@ export default tseslint.config(
     },
     rules: {
       ...tseslint.configs.disableTypeChecked.rules,
-      "@typescript-eslint/no-require-imports": "off"
-    }
-  }
+      "@typescript-eslint/no-require-imports": "off",
+    },
+  },
 );
