@@ -1,5 +1,6 @@
 import type { ArtifactReference } from "@vhs/language-core";
 import * as vscode from "vscode";
+import { resolveVhsPath } from "./common.js";
 
 interface PreviewArtifact extends ArtifactReference {
   readonly uri: vscode.Uri;
@@ -14,7 +15,7 @@ export async function openArtifactPreview(
 ): Promise<void> {
   const artifacts = await existingArtifacts(document.uri, references, output);
   if (artifacts.length === 0) {
-    await vscode.window.showInformationMessage(
+    void vscode.window.showInformationMessage(
       "No VHS output artifacts exist yet. Run the tape first.",
     );
     return;
@@ -51,12 +52,8 @@ async function existingArtifacts(
 ): Promise<readonly PreviewArtifact[]> {
   const result: PreviewArtifact[] = [];
   for (const reference of references) {
-    if (reference.path.startsWith("/") || /^[A-Za-z]:[\\/]/u.test(reference.path)) continue;
-    const uri = vscode.Uri.joinPath(
-      source,
-      "..",
-      ...reference.path.replaceAll("\\", "/").split("/"),
-    );
+    const uri = resolveVhsPath(source, reference.path);
+    if (uri === undefined) continue;
     try {
       await vscode.workspace.fs.stat(uri);
       result.push({ ...reference, uri });

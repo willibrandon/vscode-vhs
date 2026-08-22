@@ -1,4 +1,6 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs/promises");
+const path = require("node:path");
 const { TextDecoder } = require("node:util");
 const vscode = require("vscode");
 
@@ -91,6 +93,57 @@ exports.run = async function run() {
     "formatting must return edits without changing the file on disk",
   );
 
+  const tapeDirectory = vscode.Uri.joinPath(root, "vhs");
+  await vscode.workspace.fs.createDirectory(tapeDirectory);
+  const setupUri = vscode.Uri.joinPath(tapeDirectory, "setup.tape");
+  await vscode.workspace.fs.writeFile(setupUri, new TextEncoder().encode('Type "setup"\n'));
+  const runtimeUri = vscode.Uri.joinPath(tapeDirectory, "runtime.tape");
+  await vscode.workspace.fs.writeFile(
+    runtimeUri,
+    new TextEncoder().encode("Source vhs/setup.tape\nSleep 0\n"),
+  );
+  const runtime = await vscode.workspace.openTextDocument(runtimeUri);
+  await vscode.window.showTextDocument(runtime);
+  await waitFor(
+    () =>
+      vscode.commands.executeCommand(
+        "vscode.executeDefinitionProvider",
+        runtimeUri,
+        new vscode.Position(0, 12),
+      ),
+    (locations) => locations[0]?.uri.toString() === setupUri.toString(),
+    "workspace-root Source resolution",
+  );
+  const runtimeDiagnostics = vscode.languages.getDiagnostics(runtimeUri);
+  assert.ok(!runtimeDiagnostics.some((item) => item.severity === vscode.DiagnosticSeverity.Error));
+
+  const fakeVhs = await createFakeVhs(root.fsPath);
+  const configuration = vscode.workspace.getConfiguration("vhs", runtimeUri);
+  await configuration.update("executablePath", fakeVhs, vscode.ConfigurationTarget.WorkspaceFolder);
+  try {
+    await vscode.commands.executeCommand("vhs.runTape");
+    const runCwd = await waitFor(
+      () => readOptional(vscode.Uri.joinPath(root, "run-cwd.txt")),
+      (value) => value.length > 0,
+      "run working directory",
+    );
+    assert.equal(path.resolve(runCwd), path.resolve(root.fsPath));
+
+    await vscode.commands.executeCommand("vhs.validateWithInstalledVhs");
+    const validateCwd = await waitFor(
+      () => readOptional(vscode.Uri.joinPath(root, "validate-cwd.txt")),
+      (value) => value.length > 0,
+      "validation working directory",
+    );
+    assert.equal(path.resolve(validateCwd), path.resolve(root.fsPath));
+  } finally {
+    await configuration.update(
+      "executablePath",
+      undefined,
+      vscode.ConfigurationTarget.WorkspaceFolder,
+    );
+  }
+
   const commands = await vscode.commands.getCommands(true);
   for (const command of [
     "vhs.runTape",
@@ -114,6 +167,32 @@ exports.run = async function run() {
   );
   assert.ok(restarted.items.some((item) => item.label === "Type"));
 };
+
+async function createFakeVhs(root) {
+  const script = path.join(root, "fake-vhs.cjs");
+  const source = `#!/usr/bin/env node
+const fs = require("node:fs");
+const name = process.argv[2] === "validate" ? "validate-cwd.txt" : "run-cwd.txt";
+process.stdin.resume();
+process.stdin.on("end", () => fs.writeFileSync(name, process.cwd()));
+`;
+  await fs.writeFile(script, source, "utf8");
+  if (process.platform !== "win32") {
+    await fs.chmod(script, 0o755);
+    return script;
+  }
+  const wrapper = path.join(root, "fake-vhs.cmd");
+  await fs.writeFile(wrapper, `@node "%~dp0fake-vhs.cjs" %*\r\n`, "utf8");
+  return wrapper;
+}
+
+async function readOptional(uri) {
+  try {
+    return new TextDecoder().decode(await vscode.workspace.fs.readFile(uri));
+  } catch {
+    return "";
+  }
+}
 
 function applyEdits(document, edits) {
   return [...edits]

@@ -9,3 +9,4 @@
   previews.
 - Added desktop, browser, Remote SSH, exact VSIX, upstream conformance, security, and documentation
   tests.
+- Matched VHS working-directory, zero-duration, Wait, modifier, output, and path behavior.
