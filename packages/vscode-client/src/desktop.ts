@@ -7,6 +7,8 @@ import {
   clientOptions,
   registerCommonCommands,
   registerWorkspaceSynchronization,
+  resolveVhsPath,
+  vhsWorkingDirectory,
 } from "./common.js";
 import { openArtifactPreview } from "./preview.js";
 import { runVhs } from "./runner.js";
@@ -61,7 +63,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
           command: configuredExecutable(scope),
           cwd:
             scope.scheme === "file"
-              ? vscode.Uri.joinPath(scope, "..").fsPath
+              ? vhsWorkingDirectory(scope).fsPath
               : context.extensionUri.fsPath,
           timeoutMs: 10_000,
         },
@@ -116,7 +118,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     active.set(key, controller);
     await vscode.commands.executeCommand("setContext", "vhs.running", true);
     const command = configuredExecutable(document.uri);
-    const cwd = vscode.Uri.joinPath(document.uri, "..").fsPath;
+    const cwd = vhsWorkingDirectory(document.uri).fsPath;
     runOutput.info(`Running ${command} -`);
     runOutput.info(`Working directory: ${cwd}`);
     for (const dirtySource of dirtySources(document))
@@ -130,17 +132,17 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       logResult(runOutput, result);
       if (result.cancelled) return;
       if (result.code !== 0) {
-        await vscode.window.showErrorMessage(
+        void vscode.window.showErrorMessage(
           `VHS failed with exit code ${String(result.code)}. See VHS Run output.`,
         );
         return;
       }
       if (preview) await openArtifactPreview(document, await allArtifacts(document), runOutput);
-      else await vscode.window.showInformationMessage("VHS finished the tape.");
+      else void vscode.window.showInformationMessage("VHS finished the tape.");
     } catch (error) {
       runOutput.error(safeMessage(error));
       if (!controller.signal.aborted)
-        await vscode.window.showErrorMessage(`VHS failed: ${safeMessage(error)}`);
+        void vscode.window.showErrorMessage(`VHS failed: ${safeMessage(error)}`);
     } finally {
       if (active.get(key) === controller) active.delete(key);
       await vscode.commands.executeCommand("setContext", "vhs.running", active.size > 0);
@@ -167,7 +169,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         {
           arguments: ["validate", document.uri.fsPath],
           command: configuredExecutable(document.uri),
-          cwd: vscode.Uri.joinPath(document.uri, "..").fsPath,
+          cwd: vhsWorkingDirectory(document.uri).fsPath,
           timeoutMs: 30_000,
         },
         controller.signal,
@@ -178,16 +180,16 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       externalDiagnostics.set(document.uri, installedDiagnostics(document, result));
       if (explicit) {
         if (result.code === 0)
-          await vscode.window.showInformationMessage("Installed VHS accepted this tape.");
+          void vscode.window.showInformationMessage("Installed VHS accepted this tape.");
         else
-          await vscode.window.showWarningMessage(
+          void vscode.window.showWarningMessage(
             "Installed VHS rejected this tape. See VHS Run output.",
           );
       }
     } catch (error) {
       externalDiagnostics.delete(document.uri);
       if (explicit && !controller.signal.aborted)
-        await vscode.window.showErrorMessage(`VHS validation failed: ${safeMessage(error)}`);
+        void vscode.window.showErrorMessage(`VHS validation failed: ${safeMessage(error)}`);
     } finally {
       if (active.get(key) === controller) active.delete(key);
     }
@@ -267,28 +269,39 @@ function dirtySources(document: vscode.TextDocument): readonly vscode.Uri[] {
   const sources = new Set(
     parseVhs(document.getText())
       .commands.filter(({ name }) => name === "Source")
-      .map(({ arguments: args }) => args[0]?.value)
+      .map(({ arguments: args }) =>
+        args.length === 1 && ["string", "word"].includes(args[0]?.kind ?? "")
+          ? args[0]?.value
+          : undefined,
+      )
       .filter((value): value is string => value !== undefined),
   );
   return vscode.workspace.textDocuments
-    .filter(
-      (candidate) => candidate.isDirty && sources.has(relativeName(document.uri, candidate.uri)),
+    .filter((candidate) =>
+      candidate.isDirty
+        ? [...sources].some(
+            (path) => resolveVhsPath(document.uri, path)?.toString() === candidate.uri.toString(),
+          )
+        : false,
     )
     .map(({ uri }) => uri);
 }
 
-const relativeName = (from: vscode.Uri, to: vscode.Uri): string => {
-  const base = vscode.Uri.joinPath(from, "..").path;
-  return to.path.startsWith(`${base}/`) ? to.path.slice(base.length + 1) : "";
-};
-
 async function allArtifacts(document: vscode.TextDocument): Promise<readonly ArtifactReference[]> {
   const result = [...artifactReferences(parseVhs(document.getText()))];
   for (const command of parseVhs(document.getText()).commands) {
-    const path = command.name === "Source" ? command.arguments[0]?.value : undefined;
+    const argument = command.arguments[0];
+    const path =
+      command.name === "Source" &&
+      command.arguments.length === 1 &&
+      argument !== undefined &&
+      ["string", "word"].includes(argument.kind)
+        ? argument.value
+        : undefined;
     if (path === undefined || path.startsWith("/") || /^[A-Za-z]:[\\/]/u.test(path)) continue;
     try {
-      const uri = vscode.Uri.joinPath(document.uri, "..", ...path.replaceAll("\\", "/").split("/"));
+      const uri = resolveVhsPath(document.uri, path);
+      if (uri === undefined) continue;
       const text = new TextDecoder().decode(await vscode.workspace.fs.readFile(uri));
       result.push(
         ...artifactReferences(parseVhs(text)).filter(({ kind }) => kind === "screenshot"),

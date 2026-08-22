@@ -28,7 +28,7 @@ import type {
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { startLanguageServer } from "../src/server.js";
 
-const uri = "file:///workspace/main.tape";
+const uri = "file:///workspace/vhs/main.tape";
 const source = `# Demo
 Output 123.gif
 Set MarginFill "#112233"
@@ -36,7 +36,7 @@ Set Width 1200
 Hide
 Type "hello"
 Show
-Source parts/setup.tape
+Source vhs/setup.tape
 Screenshot shot.png
 `;
 
@@ -64,6 +64,7 @@ describe("VHS language server JSON-RPC contract", () => {
       clientInfo: { name: "contract test" },
       processId: null,
       rootUri: "file:///workspace",
+      workspaceFolders: [{ name: "workspace", uri: "file:///workspace" }],
     });
     expect(initialization.serverInfo).toEqual({ name: "VHS Language Server", version: "0.1.0" });
     expect(initialization.capabilities).toMatchObject({
@@ -91,8 +92,8 @@ describe("VHS language server JSON-RPC contract", () => {
     await client.sendNotification("vhs/workspaceFiles", {
       files: [
         { text: source, uri },
-        { text: 'Type "setup"', uri: "file:///workspace/parts/setup.tape" },
-        { text: "Source parts/setup.tape", uri: "file:///workspace/other.tape" },
+        { text: 'Type "setup"', uri: "file:///workspace/vhs/setup.tape" },
+        { text: "Source vhs/setup.tape", uri: "file:///workspace/other.tape" },
       ],
     });
     const diagnosticPromise = nextDiagnostics(client);
@@ -133,13 +134,13 @@ describe("VHS language server JSON-RPC contract", () => {
     const links = await request<DocumentLink[]>(client, "textDocument/documentLink", {
       textDocument: { uri },
     });
-    expect(links.map(({ target }) => target)).toContain("file:///workspace/parts/setup.tape");
+    expect(links.map(({ target }) => target)).toContain("file:///workspace/vhs/setup.tape");
 
     const definition = await request<Location | null>(client, "textDocument/definition", {
       textDocument: { uri },
       position: positionOf(source, "setup.tape", 2),
     });
-    expect(definition?.uri).toBe("file:///workspace/parts/setup.tape");
+    expect(definition?.uri).toBe("file:///workspace/vhs/setup.tape");
 
     const references = await request<Location[]>(client, "textDocument/references", {
       context: { includeDeclaration: true },
@@ -147,8 +148,8 @@ describe("VHS language server JSON-RPC contract", () => {
       position: positionOf(source, "setup.tape", 2),
     });
     expect(references.map(({ uri: referenceUri }) => referenceUri).sort()).toEqual([
-      "file:///workspace/main.tape",
       "file:///workspace/other.tape",
+      "file:///workspace/vhs/main.tape",
     ]);
 
     const lenses = await request<CodeLens[]>(client, "textDocument/codeLens", {
@@ -250,19 +251,31 @@ describe("VHS language server JSON-RPC contract", () => {
     await client.sendNotification("vhs/workspaceFiles", {
       files: [
         { text: source, uri },
-        { text: 'Type "setup"', uri: "file:///workspace/parts/setup.tape" },
+        { text: 'Type "setup"', uri: "file:///workspace/vhs/setup.tape" },
       ],
     });
     await open(client, source);
     const edit = await request<WorkspaceEdit | null>(client, "workspace/willRenameFiles", {
       files: [
         {
-          oldUri: "file:///workspace/parts/setup.tape",
+          oldUri: "file:///workspace/vhs/setup.tape",
           newUri: "file:///workspace/shared/start.tape",
         },
       ],
     });
     expect(edit?.changes?.[uri]).toMatchObject([{ newText: "shared/start.tape" }]);
+  });
+
+  it("reports only source files confirmed missing by the workspace", async () => {
+    const missingSource = "Source vhs/missing.tape\n";
+    await client.sendNotification("vhs/workspaceFiles", {
+      files: [{ text: missingSource, uri }],
+      missing: ["file:///workspace/vhs/missing.tape"],
+      roots: ["file:///workspace"],
+    });
+    const diagnosticPromise = nextDiagnostics(client);
+    await open(client, missingSource);
+    expect((await diagnosticPromise).map(({ code }) => code)).toContain("source-not-found");
   });
 });
 

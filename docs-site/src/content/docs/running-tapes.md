@@ -7,6 +7,7 @@ Use the play button or **VHS: Run Tape**. **VHS: Run and Preview** opens generat
 frame, and screenshot output.
 
 Runs use the active editor text, so unsaved root changes are included. Sourced tapes use their saved
-files. Two runs can be active at once and each can be stopped.
+files. The workspace folder is the working directory. A tape outside a workspace uses its own
+folder. Two runs can be active at once and each can be stopped.
 
 Commands run only in trusted local workspaces. Output appears in **VHS Run**.

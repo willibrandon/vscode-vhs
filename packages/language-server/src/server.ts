@@ -80,6 +80,7 @@ export function startLanguageServer(connection: Connection): void {
   let fallbackSettings = defaultSettings;
   let supportsConfiguration = false;
   let detectedVersion: string | undefined;
+  let workspaceRoots: readonly string[] = [];
 
   const settingsFor = (uri: string): Promise<ServerSettings> => {
     if (!supportsConfiguration) return Promise.resolve(fallbackSettings);
@@ -103,7 +104,9 @@ export function startLanguageServer(connection: Connection): void {
       ? [
           ...tree.diagnostics.map((item) => toDiagnostic(document, item)),
           ...versionDiagnostics(tree, targetVersion).map((item) => toDiagnostic(document, item)),
-          ...sourceDiagnostics(document, tree, allFiles),
+          ...sourceDiagnostics(document, tree, allFiles, workspaceRoots, (uri) =>
+            workspaceIndex.isMissing(uri),
+          ),
         ].slice(0, settings.validation.maxProblems)
       : [];
     void connection.sendDiagnostics({ diagnostics, uri: document.uri, version: document.version });
@@ -111,6 +114,7 @@ export function startLanguageServer(connection: Connection): void {
 
   connection.onInitialize((params: InitializeParams): InitializeResult => {
     supportsConfiguration = params.capabilities.workspace?.configuration === true;
+    workspaceRoots = params.workspaceFolders?.map(({ uri }) => uri) ?? [];
     return {
       capabilities: {
         codeActionProvider: { codeActionKinds: [CodeActionKind.QuickFix] },
@@ -149,9 +153,17 @@ export function startLanguageServer(connection: Connection): void {
   });
 
   connection.onNotification("vhs/workspaceFiles", (payload: unknown): void => {
-    const files = asObject(payload)?.["files"];
+    const body = asObject(payload);
+    const files = body?.["files"];
+    const missing = body?.["missing"];
+    const roots = body?.["roots"];
+    if (Array.isArray(roots))
+      workspaceRoots = roots.filter((root): root is string => typeof root === "string");
     workspaceIndex.replace(
       Array.isArray(files) ? files.filter(isWorkspaceFile).slice(0, 2_000) : [],
+      Array.isArray(missing)
+        ? missing.filter((uri): uri is string => typeof uri === "string").slice(0, 2_000)
+        : [],
     );
     for (const document of documents.all()) void publish(document);
   });
@@ -280,8 +292,9 @@ export function startLanguageServer(connection: Connection): void {
     return parseVhs(document.getText()).commands.flatMap((command): DocumentLink[] => {
       if (!["Source", "Output", "Screenshot"].includes(command.name)) return [];
       const value = command.arguments[0];
+      if (!isPathArgument(command.arguments)) return [];
       if (value === undefined) return [];
-      const target = sourceTarget(document.uri, value.value);
+      const target = sourceTarget(document.uri, value.value, workspaceRoots);
       return target === undefined
         ? []
         : [
@@ -300,10 +313,14 @@ export function startLanguageServer(connection: Connection): void {
     const offset = document.offsetAt(params.position);
     const source = parseVhs(document.getText()).commands.find(
       (command) =>
-        command.name === "Source" && command.startOffset <= offset && offset <= command.endOffset,
+        command.name === "Source" &&
+        isPathArgument(command.arguments) &&
+        command.startOffset <= offset &&
+        offset <= command.endOffset,
     );
     const value = source?.arguments[0]?.value;
-    const target = value === undefined ? undefined : sourceTarget(document.uri, value);
+    const target =
+      value === undefined ? undefined : sourceTarget(document.uri, value, workspaceRoots);
     return target === undefined
       ? undefined
       : {
@@ -318,13 +335,18 @@ export function startLanguageServer(connection: Connection): void {
     const offset = document.offsetAt(params.position);
     const selected = parseVhs(document.getText()).commands.find(
       (command) =>
-        command.name === "Source" && command.startOffset <= offset && offset <= command.endOffset,
+        command.name === "Source" &&
+        isPathArgument(command.arguments) &&
+        command.startOffset <= offset &&
+        offset <= command.endOffset,
     );
     const selectedValue = selected?.arguments[0]?.value;
     const target =
-      selectedValue === undefined ? undefined : sourceTarget(document.uri, selectedValue);
+      selectedValue === undefined
+        ? undefined
+        : sourceTarget(document.uri, selectedValue, workspaceRoots);
     if (target === undefined) return [];
-    return sourceOccurrences(workspaceIndex.merged(documents.all()))
+    return sourceOccurrences(workspaceIndex.merged(documents.all()), workspaceRoots)
       .filter((occurrence) => occurrence.target === target)
       .map((occurrence) => ({
         uri: occurrence.document.uri,
@@ -431,10 +453,10 @@ export function startLanguageServer(connection: Connection): void {
     const files = workspaceIndex.merged(documents.all());
     const changes: Record<string, TextEdit[]> = {};
     for (const rename of params.files) {
-      for (const occurrence of sourceOccurrences(files).filter(
+      for (const occurrence of sourceOccurrences(files, workspaceRoots).filter(
         ({ target }) => target === rename.oldUri,
       )) {
-        const path = relativeSourcePath(occurrence.document.uri, rename.newUri);
+        const path = relativeSourcePath(occurrence.document.uri, rename.newUri, workspaceRoots);
         const value = occurrence.command.arguments[0];
         if (path === undefined || value === undefined) continue;
         const edits = changes[occurrence.document.uri] ?? [];
@@ -464,24 +486,31 @@ function sourceDiagnostics(
     string,
     { readonly text: string; readonly tree: VhsDocument; readonly uri: string }
   >,
+  workspaceRoots: readonly string[],
+  isMissing: (uri: string) => boolean,
 ): Diagnostic[] {
   if (!files.has(document.uri)) return [];
   const result: Diagnostic[] = [];
   for (const command of tree.commands) {
     if (command.name !== "Source") continue;
     const value = command.arguments[0];
-    const target = value === undefined ? undefined : sourceTarget(document.uri, value.value);
+    if (!isPathArgument(command.arguments)) continue;
+    const target =
+      value === undefined ? undefined : sourceTarget(document.uri, value.value, workspaceRoots);
     if (value === undefined || target === undefined) continue;
     const source = files.get(target);
-    if (source === undefined)
-      result.push({
-        code: "source-not-found",
-        message: `Source tape '${value.value}' was not found.`,
-        range: toRange(document, value),
-        severity: DiagnosticSeverity.Error,
-        source: "VHS",
-      });
-    else if (source.text.length === 0)
+    if (source === undefined) {
+      if (isMissing(target))
+        result.push({
+          code: "source-not-found",
+          message: `Source tape '${value.value}' was not found.`,
+          range: toRange(document, value),
+          severity: DiagnosticSeverity.Error,
+          source: "VHS",
+        });
+      continue;
+    }
+    if (source.text.length === 0)
       result.push({
         code: "source-empty",
         message: "Source tape is empty.",
@@ -498,7 +527,7 @@ function sourceDiagnostics(
         source: "VHS",
       });
   }
-  if (sourceCycle(files, document.uri)) {
+  if (sourceCycle(files, document.uri, workspaceRoots)) {
     const source = tree.commands.find((command) => command.name === "Source")?.arguments[0];
     if (source !== undefined)
       result.push({
@@ -589,3 +618,6 @@ const isWorkspaceFile = (
   const item = asObject(value);
   return typeof item?.["text"] === "string" && typeof item["uri"] === "string";
 };
+
+const isPathArgument = (tokens: readonly Token[]): boolean =>
+  tokens.length === 1 && ["string", "word"].includes(tokens[0]?.kind ?? "");

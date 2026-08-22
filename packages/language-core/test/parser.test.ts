@@ -139,4 +139,55 @@ describe("parseVhs", () => {
     );
     expect(document.diagnostics.filter(({ code }) => code === "shadowed-output")).toHaveLength(2);
   });
+
+  it("allows zero everywhere VHS allows it and rejects a zero Wait timeout", () => {
+    const accepted = parseVhs(
+      'Sleep 0 Set TypingSpeed 0ms Set WaitTimeout 0s Type@0ms "now" Enter@0ms 0',
+    );
+    expect(accepted.diagnostics.filter(({ severity }) => severity === "error")).toEqual([]);
+    expect(parseVhs("Wait@0ms").diagnostics.map(({ code }) => code)).toContain(
+      "non-positive-duration",
+    );
+  });
+
+  it("validates Wait scopes, durations, patterns, and extra values", () => {
+    const valid = parseVhs("Wait+Line Wait+Screen@1ms /(?P<ready>ready)/");
+    expect(valid.diagnostics.filter(({ severity }) => severity === "error")).toEqual([]);
+
+    const invalid = parseVhs("Wait+Window@0ms /[/ extra");
+    expect(invalid.diagnostics.map(({ code }) => code)).toEqual([
+      "invalid-wait-scope",
+      "non-positive-duration",
+      "invalid-regex",
+      "extra-argument",
+    ]);
+  });
+
+  it("checks command argument shapes that installed VHS enforces", () => {
+    const document = parseVhs(
+      "Type@1s Copy 10 Enter nope Ctrl+Shift+C+Alt Alt+Space Shift+Space Env NAME 10",
+    );
+    expect(document.diagnostics.map(({ code }) => code)).toEqual([
+      "missing-argument",
+      "expected-string",
+      "expected-number",
+      "modifier-order",
+      "invalid-modified-key",
+      "invalid-modified-key",
+      "expected-string",
+    ]);
+  });
+
+  it("matches VHS integer, duration-unit, path, and extension behavior", () => {
+    const document = parseVhs(
+      "Set Padding 0.5 Set TypingSpeed 1m Output folder.name/frames Screenshot shot.PNG Output 123.gif",
+    );
+    expect(document.diagnostics.map(({ code }) => code)).toEqual([
+      "expected-integer",
+      "extra-argument",
+      "frame-directory-slash",
+      "screenshot-extension",
+      "quote-path",
+    ]);
+  });
 });

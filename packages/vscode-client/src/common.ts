@@ -39,6 +39,11 @@ interface WorkspaceFile {
   readonly uri: string;
 }
 
+interface WorkspaceSnapshot {
+  readonly files: readonly WorkspaceFile[];
+  readonly missing: readonly string[];
+}
+
 export function registerWorkspaceSynchronization(
   context: vscode.ExtensionContext,
   client: BaseLanguageClient,
@@ -48,9 +53,10 @@ export function registerWorkspaceSynchronization(
   let debounce: ReturnType<typeof setTimeout> | undefined;
   const refresh = async (): Promise<void> => {
     const current = ++generation;
-    const files = await workspaceFiles();
+    const { files, missing } = await workspaceFiles();
     if (current !== generation) return;
-    await client.sendNotification("vhs/workspaceFiles", { files });
+    const roots = vscode.workspace.workspaceFolders?.map(({ uri }) => uri.toString()) ?? [];
+    await client.sendNotification("vhs/workspaceFiles", { files, missing, roots });
     output.debug(`Indexed ${files.length} VHS tape files.`);
   };
   const schedule = (): void => {
@@ -66,6 +72,12 @@ export function registerWorkspaceSynchronization(
     watcher.onDidCreate(schedule),
     watcher.onDidChange(schedule),
     watcher.onDidDelete(schedule),
+    vscode.workspace.onDidOpenTextDocument((document) => {
+      if (document.languageId === "vhs") schedule();
+    }),
+    vscode.workspace.onDidChangeTextDocument(({ document }) => {
+      if (document.languageId === "vhs") schedule();
+    }),
     vscode.workspace.onDidSaveTextDocument((document) => {
       if (document.languageId === "vhs") schedule();
     }),
@@ -81,14 +93,23 @@ export function registerWorkspaceSynchronization(
   return refresh;
 }
 
-async function workspaceFiles(): Promise<readonly WorkspaceFile[]> {
-  const seeds = await vscode.workspace.findFiles(
+async function workspaceFiles(): Promise<WorkspaceSnapshot> {
+  const discovered = await vscode.workspace.findFiles(
     "**/*.tape",
     "**/{.git,node_modules,.cache,dist,coverage}/**",
     2_000,
   );
+  const open = new Map(
+    vscode.workspace.textDocuments
+      .filter((document) => document.languageId === "vhs" && !document.isUntitled)
+      .map((document) => [document.uri.toString(), document] as const),
+  );
+  const seeds = [...discovered, ...[...open.values()].map(({ uri }) => uri)].filter(
+    (uri, index, items) => items.findIndex((item) => item.toString() === uri.toString()) === index,
+  );
   const pending = [...seeds];
   const seen = new Set<string>();
+  const missing = new Set<string>();
   const files: WorkspaceFile[] = [];
   let totalBytes = 0;
   while (pending.length > 0 && files.length < 2_000 && totalBytes < 16_777_216) {
@@ -96,21 +117,51 @@ async function workspaceFiles(): Promise<readonly WorkspaceFile[]> {
     if (uri === undefined || seen.has(uri.toString())) continue;
     seen.add(uri.toString());
     try {
-      const bytes = await vscode.workspace.fs.readFile(uri);
+      const openDocument = open.get(uri.toString());
+      const bytes =
+        openDocument === undefined
+          ? await vscode.workspace.fs.readFile(uri)
+          : new TextEncoder().encode(openDocument.getText());
       if (bytes.byteLength > 1_048_576) continue;
       totalBytes += bytes.byteLength;
       if (totalBytes > 16_777_216) break;
       const text = new TextDecoder().decode(bytes);
       files.push({ text, uri: uri.toString() });
       for (const command of parseVhs(text).commands) {
-        const path = command.name === "Source" ? command.arguments[0]?.value : undefined;
+        const argument = command.arguments[0];
+        const path =
+          command.name === "Source" &&
+          command.arguments.length === 1 &&
+          argument !== undefined &&
+          ["string", "word"].includes(argument.kind)
+            ? argument.value
+            : undefined;
         if (path === undefined || path.startsWith("/") || /^[A-Za-z]:[\\/]/u.test(path)) continue;
-        const target = vscode.Uri.joinPath(uri, "..", ...path.replaceAll("\\", "/").split("/"));
+        const target = resolveVhsPath(uri, path);
+        if (target === undefined) continue;
         if (!seen.has(target.toString())) pending.push(target);
       }
-    } catch {
-      // Missing source files are diagnosed by the language server.
+    } catch (error) {
+      if (error instanceof vscode.FileSystemError && error.code === "FileNotFound")
+        missing.add(uri.toString());
     }
   }
-  return files.sort((left, right) => left.uri.localeCompare(right.uri));
+  return {
+    files: files.sort((left, right) => left.uri.localeCompare(right.uri)),
+    missing: [...missing].sort(),
+  };
+}
+
+export function vhsWorkingDirectory(resource: vscode.Uri): vscode.Uri {
+  return vscode.workspace.getWorkspaceFolder(resource)?.uri ?? vscode.Uri.joinPath(resource, "..");
+}
+
+export function resolveVhsPath(resource: vscode.Uri, path: string): vscode.Uri | undefined {
+  if (path.length === 0) return undefined;
+  const normalized = path.replaceAll("\\", "/");
+  if (normalized.startsWith("/")) return resource.with({ path: normalized });
+  const windows = /^([A-Za-z]):\/(.*)$/u.exec(normalized);
+  if (windows?.[1] !== undefined)
+    return resource.with({ path: `/${windows[1].toLowerCase()}:/${windows[2] ?? ""}` });
+  return vscode.Uri.joinPath(vhsWorkingDirectory(resource), ...normalized.split("/"));
 }

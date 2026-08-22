@@ -108,7 +108,7 @@
       "patterns": [
         {
           "name": "string.regexp.vhs",
-          "begin": "/",
+          "begin": "(?<!\\S)/",
           "beginCaptures": { "0": { "name": "punctuation.definition.string.begin.vhs" } },
           "end": "(?<!\\\\)(?:\\\\\\\\)*/|$",
           "endCaptures": { "0": { "name": "punctuation.definition.string.end.vhs" } },
