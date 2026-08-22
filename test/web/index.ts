@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-const extensionId = "willibrandon.vhs";
+const extensionId = "willibrandon.vhs-tape";
 
 export async function run(): Promise<void> {
   const extension = vscode.extensions.getExtension(extensionId);

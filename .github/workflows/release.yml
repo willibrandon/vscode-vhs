@@ -46,6 +46,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: node ./scripts/check-release.mjs
+      - run: npm run check:registry-identity
       - name: Verify publishing credentials
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}

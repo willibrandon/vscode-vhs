@@ -10,7 +10,7 @@ const manifest = JSON.parse(await readFile(resolve(root, "package.json"), "utf8"
 const changelog = await readFile(resolve(root, "CHANGELOG.md"), "utf8");
 const expectedTag = `v${manifest.version}`;
 const actualTag = process.env.GITHUB_REF_NAME ?? "";
-const expectedExtensionId = "willibrandon.vhs";
+const expectedExtensionId = "willibrandon.vhs-tape";
 const failures = [];
 
 if (actualTag !== expectedTag)

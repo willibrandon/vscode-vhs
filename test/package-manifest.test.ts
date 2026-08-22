@@ -33,9 +33,9 @@ interface PackageManifest {
 describe("extension manifest", () => {
   it("uses the intended identity and automatic activation", async () => {
     const manifest = JSON.parse(await readFile("package.json", "utf8")) as PackageManifest;
-    expect(manifest.name).toBe("vhs");
+    expect(manifest.name).toBe("vhs-tape");
     expect(manifest.publisher).toBe("willibrandon");
-    expect(manifest.version).toBe("0.1.1");
+    expect(manifest.version).toBe("0.1.2");
     expect(manifest.activationEvents).toBeUndefined();
     expect(manifest.main).toBe("./dist/extension.cjs");
     expect(manifest.browser).toBe("./dist/browser.js");

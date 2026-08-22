@@ -7,11 +7,11 @@ Language support for VHS tape files in Visual Studio Code.
 Search for **VHS** in the Extensions view or run:
 
 ```sh
-code --install-extension willibrandon.vhs
+code --install-extension willibrandon.vhs-tape
 ```
 
-[Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=willibrandon.vhs) ·
-[Open VSX](https://open-vsx.org/extension/willibrandon/vhs) ·
+[Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=willibrandon.vhs-tape)
+· [Open VSX](https://open-vsx.org/extension/willibrandon/vhs-tape) ·
 [Documentation](https://willibrandon.github.io/vscode-vhs/)
 
 ## Features

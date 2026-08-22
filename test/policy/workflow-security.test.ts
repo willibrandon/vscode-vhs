@@ -89,6 +89,19 @@ describe("workflow supply-chain policy", () => {
     }
   });
 
+  it("checks the registry package identity before staging or publishing", () => {
+    const ci = workflow("ci.yml");
+    const release = workflow("release.yml");
+    const check = "- run: npm run check:registry-identity";
+
+    expect(ci.indexOf(check)).toBeGreaterThan(ci.indexOf("- run: npm run verify"));
+    expect(ci.indexOf("- name: Stage verified bundles")).toBeGreaterThan(ci.indexOf(check));
+    expect(release.indexOf(check)).toBeGreaterThan(release.indexOf("- name: Check release source"));
+    expect(release.indexOf("- name: Create draft GitHub release")).toBeGreaterThan(
+      release.indexOf(check),
+    );
+  });
+
   it("keeps security review and dependency updates enabled", async () => {
     expect(workflow("dependency-review.yml")).toContain("fail-on-severity: moderate");
     expect(workflow("codeql.yml")).toContain("queries: security-and-quality");

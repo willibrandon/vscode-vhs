@@ -5,7 +5,7 @@ import { pathToFileURL } from "node:url";
 
 const root = resolve(import.meta.dirname, "..");
 const registryOrigin = "https://open-vsx.org";
-const registryExtensionUrl = new URL("/api/willibrandon/vhs", registryOrigin);
+const registryExtensionUrl = new URL("/api/willibrandon/vhs-tape", registryOrigin);
 
 export function isExpectedOpenVsxRelease(metadata, expected) {
   if (typeof metadata !== "object" || metadata === null) return false;

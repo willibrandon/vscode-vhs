@@ -1,12 +1,12 @@
 {
   "name": "@vhs/language-server",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/server.ts"
   },
   "dependencies": {
-    "@vhs/language-core": "0.1.1"
+    "@vhs/language-core": "0.1.2"
   }
 }
