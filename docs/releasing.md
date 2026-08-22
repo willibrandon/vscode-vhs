@@ -20,7 +20,9 @@ Create an annotated tag and push it:
 
 ```sh
 release_version=$(node -p "require('./package.json').version")
-git tag -a "v$release_version" -m "VHS $release_version"
+git tag -a "v$release_version" \
+  -m "VHS $release_version" \
+  -m "First stable release with VHS 0.11 language support, tape runs, and output previews."
 git push origin "v$release_version"
 ```
 
