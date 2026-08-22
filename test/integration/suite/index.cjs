@@ -4,7 +4,7 @@ const path = require("node:path");
 const { TextDecoder } = require("node:util");
 const vscode = require("vscode");
 
-const extensionId = "willibrandon.vhs";
+const extensionId = "willibrandon.vhs-tape";
 
 exports.run = async function run() {
   const root = vscode.workspace.workspaceFolders?.[0]?.uri;

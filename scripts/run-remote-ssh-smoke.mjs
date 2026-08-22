@@ -381,7 +381,7 @@ async function copyLanguageServerLog(containerName, destination) {
     "-type",
     "f",
     "-path",
-    "*willibrandon.vhs/VHS Language Server.log",
+    "*willibrandon.vhs-tape/VHS Language Server.log",
   ]);
   const logs = stdout
     .split(/\r?\n/u)

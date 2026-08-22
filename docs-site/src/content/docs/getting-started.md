@@ -6,7 +6,7 @@ description: Install the extension and open a tape.
 Search for **VHS** in the Extensions view or run:
 
 ```sh
-code --install-extension willibrandon.vhs
+code --install-extension willibrandon.vhs-tape
 ```
 
 For WSL, SSH, or Dev Containers, install it in that host.
@@ -25,5 +25,5 @@ Sleep 1s
 
 Install [VHS](https://github.com/charmbracelet/vhs) plus `ffmpeg` and `ttyd` to run tapes.
 
-[Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=willibrandon.vhs)
-and [Open VSX](https://open-vsx.org/extension/willibrandon/vhs) publish the same extension.
+[Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=willibrandon.vhs-tape)
+and [Open VSX](https://open-vsx.org/extension/willibrandon/vhs-tape) publish the same extension.

@@ -23,7 +23,7 @@ export default tseslint.config(
     files: ["**/*.{ts,mts}"],
     languageOptions: {
       parserOptions: {
-        projectService: { allowDefaultProject: ["*.mts"] },
+        projectService: { allowDefaultProject: ["*.mts", "scripts/*.d.mts"] },
         tsconfigRootDir: import.meta.dirname,
       },
     },

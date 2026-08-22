@@ -15,13 +15,13 @@ exports.activate = async function activate() {
     assert.equal(vscode.env.remoteName, "ssh-remote");
     assert.equal(folder.uri.scheme, "file");
 
-    const extension = vscode.extensions.getExtension("willibrandon.vhs");
-    assert.ok(extension, "willibrandon.vhs is not installed in the remote extension host");
+    const extension = vscode.extensions.getExtension("willibrandon.vhs-tape");
+    assert.ok(extension, "willibrandon.vhs-tape is not installed in the remote extension host");
     const extensionVersion = extension.packageJSON.version;
     assert.equal(typeof extensionVersion, "string");
     assert.equal(
       extension.extensionPath,
-      `/home/vscode/.vscode-server/extensions/willibrandon.vhs-${extensionVersion}`,
+      `/home/vscode/.vscode-server/extensions/willibrandon.vhs-tape-${extensionVersion}`,
     );
 
     const vhsUri = vscode.Uri.joinPath(folder.uri, "demo.tape");
