@@ -1,12 +1,28 @@
 # VHS
 
-Language support for VHS tape files in Visual Studio Code.
+Complete VHS tape support for Visual Studio Code.
 
-The extension provides highlighting, completion, hover help, diagnostics, formatting, and trusted
-local tape execution with artifact previews.
+[Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=willibrandon.vhs) ·
+[Open VSX](https://open-vsx.org/extension/willibrandon/vhs) ·
+[Documentation](https://willibrandon.github.io/vscode-vhs/)
 
-Documentation and install links will be published at
-[willibrandon.github.io/vscode-vhs](https://willibrandon.github.io/vscode-vhs/).
+- Highlighting, completion, hover help, diagnostics, and formatting
+- All VHS 0.11 commands, settings, shells, and built-in themes
+- Source navigation, references, rename updates, symbols, and folding
+- Trusted tape runs, installed VHS validation, cancellation, and output logs
+- GIF, video, text, frame, and screenshot previews
+- Desktop, remote, and browser language support
+
+VHS is optional for editing. Install `vhs`, `ffmpeg`, and `ttyd` to run tapes.
+
+```vhs
+Output demo.gif
+Set Shell bash
+
+Type "echo hello"
+Enter
+Sleep 1s
+```
 
 ## Development
 
@@ -15,4 +31,4 @@ npm ci
 npm run verify
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the complete development setup.
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/testing.md](docs/testing.md).
