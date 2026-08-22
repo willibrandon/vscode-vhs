@@ -22,4 +22,12 @@ describe("formatVhs", () => {
       }),
     );
   });
+
+  it("handles large runs of whitespace in linear time", () => {
+    const source = `Type "hello"${"\t".repeat(100_000)}${"\n".repeat(100_000)}`;
+    const started = performance.now();
+
+    expect(formatVhs(source)).toBe('Type "hello"\n');
+    expect(performance.now() - started).toBeLessThan(1_000);
+  });
 });

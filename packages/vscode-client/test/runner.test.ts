@@ -130,7 +130,12 @@ describe("VHS process runner", () => {
     );
     const elapsed = performance.now() - started;
 
-    expect(result).toMatchObject({ cancelled: true, code: null, signal: "SIGTERM" });
+    expect(result.cancelled).toBe(true);
+    if (process.platform === "win32") {
+      expect(result).toMatchObject({ code: 1, signal: null });
+    } else {
+      expect(result).toMatchObject({ code: null, signal: "SIGTERM" });
+    }
     expect(result.durationMs).toBeGreaterThanOrEqual(20);
     expect(elapsed).toBeLessThan(200);
   });
