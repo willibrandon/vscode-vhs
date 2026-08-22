@@ -55,6 +55,12 @@ Screenshot "ready.png"
     ) as LanguageConfiguration;
     expect(configuration.comments.lineComment).toEqual({ comment: "#", noIndent: false });
   });
+
+  it("does not color a Source path as a regular expression", async () => {
+    const grammar = await loadGrammar("source.vhs");
+    const source = "Source vhs/setup.tape\n";
+    expect(scopesAt(grammar, source, 0, "setup")).not.toContain("string.regexp.vhs");
+  });
 });
 
 function scopesAt(

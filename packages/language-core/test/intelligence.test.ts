@@ -30,6 +30,23 @@ describe("language intelligence", () => {
     expect(hoverAt(type, 1)?.markdown).toContain("`Type[@<Duration>] <Text>`");
   });
 
+  it("offers only valid values after Wait and modifier + signs", () => {
+    const wait = parseVhs("Wait+");
+    expect(completionsAt(wait, wait.text.length).map(({ label }) => label)).toEqual([
+      "Line",
+      "Screen",
+    ]);
+    const alt = parseVhs("Alt+");
+    expect(completionsAt(alt, alt.text.length).map(({ label }) => label)).toEqual([
+      "Enter",
+      "Tab",
+      "[",
+      "]",
+    ]);
+    const ctrl = parseVhs("Ctrl+");
+    expect(completionsAt(ctrl, ctrl.text.length).map(({ label }) => label)).toContain("Backspace");
+  });
+
   it("returns useful document symbols", () => {
     const document = parseVhs(
       "Set Width 1200 Source setup.tape Output demo.gif Screenshot ready.png",
@@ -54,6 +71,12 @@ describe("language intelligence", () => {
       "frames",
       "screenshot",
     ]);
+  });
+
+  it("uses VHS case-sensitive output extensions", () => {
+    const document = parseVhs("Output demo.MP4 Output transcript.TXT");
+    expect(artifactReferences(document).map(({ kind }) => kind)).toEqual(["image", "image"]);
+    expect(document.diagnostics.filter(({ severity }) => severity === "error")).toEqual([]);
   });
 
   it("warns when selected VHS is older than used syntax", () => {

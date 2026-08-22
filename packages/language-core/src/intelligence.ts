@@ -63,10 +63,30 @@ export function completionsAt(document: VhsDocument, offset: number): readonly C
   }
 
   if (last?.value === "+" || previous?.value === "+") {
-    return valueCompletions(
-      ["Alt", "Shift", "Enter", "Space", "Tab", "Up", "Down", "Left", "Right"],
-      "Key or modifier",
-    );
+    if (currentCommand?.name === "Wait") return valueCompletions(["Line", "Screen"], "Wait scope");
+    if (["Alt", "Shift"].includes(currentCommand?.name ?? ""))
+      return valueCompletions(["Enter", "Tab", "[", "]"], "Key");
+    if (currentCommand?.name === "Ctrl")
+      return valueCompletions(
+        [
+          "Alt",
+          "Shift",
+          "Enter",
+          "Space",
+          "Backspace",
+          "Left",
+          "Right",
+          "Up",
+          "Down",
+          "-",
+          "@",
+          "[",
+          "]",
+          "^",
+          "\\",
+        ],
+        "Key or modifier",
+      );
   }
 
   return COMMANDS.map((entry) => commandCompletion(entry.name, entry.syntax, entry.description));
@@ -112,17 +132,21 @@ export function artifactReferences(document: VhsDocument): readonly ArtifactRefe
   const artifacts: ArtifactReference[] = [];
   for (const command of document.commands) {
     const value = command.arguments[0];
-    if (value === undefined) continue;
+    if (
+      value === undefined ||
+      command.arguments.length !== 1 ||
+      !["string", "word"].includes(value.kind)
+    )
+      continue;
     const path = value.value;
-    const lower = path.toLowerCase();
     if (command.name === "Screenshot") artifacts.push({ kind: "screenshot", path, range: value });
     if (command.name !== "Output") continue;
     const kind: ArtifactReference["kind"] =
-      lower.endsWith(".mp4") || lower.endsWith(".webm")
+      path.endsWith(".mp4") || path.endsWith(".webm")
         ? "video"
-        : [".txt", ".ascii", ".test"].some((extension) => lower.endsWith(extension))
+        : [".txt", ".ascii", ".test"].some((extension) => path.endsWith(extension))
           ? "text"
-          : lower.endsWith("/")
+          : path.endsWith("/")
             ? "frames"
             : "image";
     artifacts.push({ kind, path, range: value });
