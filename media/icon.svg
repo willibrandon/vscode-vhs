@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="VHS terminal recording icon">
+  <rect width="256" height="256" rx="48" fill="#191919"/>
+  <rect x="34" y="45" width="188" height="166" rx="22" fill="#252525" stroke="#f0b429" stroke-width="10"/>
+  <path d="M34 82h188" stroke="#f0b429" stroke-width="10"/>
+  <circle cx="58" cy="64" r="7" fill="#ff5f56"/>
+  <circle cx="80" cy="64" r="7" fill="#ffbd2e"/>
+  <circle cx="102" cy="64" r="7" fill="#27c93f"/>
+  <path d="m67 122 30 24-30 24" fill="none" stroke="#f5f1e8" stroke-linecap="round" stroke-linejoin="round" stroke-width="12"/>
+  <path d="M115 170h54" stroke="#f0b429" stroke-linecap="round" stroke-width="12"/>
+  <circle cx="188" cy="119" r="15" fill="#ff5f56"/>
+</svg>

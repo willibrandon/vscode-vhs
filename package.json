@@ -1,0 +1,231 @@
+{
+  "name": "vhs",
+  "displayName": "VHS",
+  "description": "Language support for VHS tape files in Visual Studio Code",
+  "version": "0.1.0",
+  "license": "MIT",
+  "publisher": "willibrandon",
+  "author": { "name": "Brandon Williams" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/willibrandon/vscode-vhs.git"
+  },
+  "bugs": { "url": "https://github.com/willibrandon/vscode-vhs/issues" },
+  "homepage": "https://willibrandon.github.io/vscode-vhs/",
+  "icon": "media/icon.png",
+  "categories": ["Programming Languages", "Linters", "Formatters", "Visualization"],
+  "keywords": ["vhs", "tape", "terminal", "recording", "gif", "charmbracelet"],
+  "packageManager": "npm@12.0.2",
+  "workspaces": ["packages/*"],
+  "files": [
+    "dist/browser.js",
+    "dist/browserServer.js",
+    "dist/extension.cjs",
+    "dist/nodeServer.cjs",
+    "language-configuration.json",
+    "media/icon.png",
+    "snippets/*.json",
+    "syntaxes/*.json",
+    "CHANGELOG.md",
+    "LICENSE",
+    "LICENSES/*.txt",
+    "README.md",
+    "SECURITY.md",
+    "SUPPORT.md",
+    "THIRD-PARTY-NOTICES.md"
+  ],
+  "engines": {
+    "node": ">=24 <25",
+    "vscode": "^1.102.0"
+  },
+  "main": "./dist/extension.cjs",
+  "browser": "./dist/browser.js",
+  "extensionKind": ["workspace", "ui"],
+  "capabilities": {
+    "virtualWorkspaces": {
+      "supported": true,
+      "description": "Language features are available; installed VHS commands are disabled."
+    },
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Language features remain available; installed VHS commands are disabled.",
+      "restrictedConfigurations": [
+        "vhs.executablePath",
+        "vhs.externalValidation.mode"
+      ]
+    }
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "vhs",
+        "aliases": ["VHS", "VHS Tape", "tape"],
+        "extensions": [".tape"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "vhs",
+        "scopeName": "source.vhs",
+        "path": "./syntaxes/vhs.tmLanguage.json"
+      },
+      {
+        "scopeName": "source.vhs.markdown",
+        "path": "./syntaxes/vhs-markdown.tmLanguage.json",
+        "injectTo": ["text.html.markdown"]
+      }
+    ],
+    "snippets": [{ "language": "vhs", "path": "./snippets/vhs.json" }],
+    "commands": [
+      { "command": "vhs.runTape", "title": "Run Tape", "category": "VHS", "icon": "$(play)" },
+      { "command": "vhs.runAndPreview", "title": "Run and Preview", "category": "VHS", "icon": "$(open-preview)" },
+      { "command": "vhs.openPreview", "title": "Open Preview", "category": "VHS" },
+      { "command": "vhs.stopTape", "title": "Stop Tape", "category": "VHS", "icon": "$(debug-stop)" },
+      { "command": "vhs.validateWithInstalledVhs", "title": "Validate with Installed VHS", "category": "VHS" },
+      { "command": "vhs.openDocumentation", "title": "Open Documentation", "category": "VHS" },
+      { "command": "vhs.restartLanguageServer", "title": "Restart Language Server", "category": "VHS" },
+      { "command": "vhs.showLanguageServerOutput", "title": "Show Language Server Output", "category": "VHS" },
+      { "command": "vhs.showRunOutput", "title": "Show Run Output", "category": "VHS" }
+    ],
+    "menus": {
+      "editor/title": [
+        { "command": "vhs.runTape", "when": "editorLangId == vhs", "group": "navigation@10" },
+        { "command": "vhs.runAndPreview", "when": "editorLangId == vhs", "group": "navigation@11" },
+        { "command": "vhs.stopTape", "when": "editorLangId == vhs && vhs.running", "group": "navigation@12" }
+      ],
+      "editor/context": [
+        { "command": "vhs.runTape", "when": "editorLangId == vhs", "group": "vhs@1" },
+        { "command": "vhs.runAndPreview", "when": "editorLangId == vhs", "group": "vhs@2" },
+        { "command": "vhs.validateWithInstalledVhs", "when": "editorLangId == vhs", "group": "vhs@3" }
+      ]
+    },
+    "configuration": {
+      "title": "VHS",
+      "properties": {
+        "vhs.validation.enable": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "Enable built-in VHS diagnostics."
+        },
+        "vhs.validation.maxProblems": {
+          "type": "integer",
+          "default": 200,
+          "minimum": 1,
+          "maximum": 2000,
+          "scope": "resource",
+          "description": "Maximum diagnostics per document."
+        },
+        "vhs.targetVersion": {
+          "type": "string",
+          "default": "latest",
+          "scope": "resource",
+          "pattern": "^(latest|auto|v?[0-9]+\\.[0-9]+\\.[0-9]+)$",
+          "description": "VHS version used for language checks."
+        },
+        "vhs.externalValidation.mode": {
+          "type": "string",
+          "default": "off",
+          "enum": ["off", "onSave"],
+          "scope": "resource",
+          "description": "Run vhs validate after saving a trusted tape."
+        },
+        "vhs.executablePath": {
+          "type": "string",
+          "default": "vhs",
+          "scope": "machine-overridable",
+          "description": "Path to the VHS executable."
+        },
+        "vhs.codeLens.enabled": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "Show run actions at the top of a tape."
+        },
+        "vhs.trace.server": {
+          "type": "string",
+          "default": "off",
+          "enum": ["off", "messages", "verbose"],
+          "scope": "window",
+          "description": "Language server protocol tracing."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "clean": "node ./scripts/clean.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --build",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "build": "node ./esbuild.mjs",
+    "generate:icon": "node ./scripts/generate-icon.mjs",
+    "check:icon": "node ./scripts/check-icon.mjs",
+    "check:upstream": "node ./scripts/check-upstream.mjs",
+    "check:bundles": "node ./scripts/check-bundles.mjs",
+    "check:licenses": "node ./scripts/check-licenses.mjs",
+    "check:package": "node ./scripts/check-package.mjs",
+    "test:integration": "npm run build && node ./scripts/run-integration-tests.mjs",
+    "test:web": "npm run build && node ./scripts/run-web-tests.mjs",
+    "test:vsix": "npm run package && node ./scripts/run-package-smoke.mjs",
+    "test:remote": "npm run package && node ./scripts/run-remote-ssh-smoke.mjs",
+    "test:docs": "npm --prefix docs-site run build && node ./scripts/test-docs-popup.mjs",
+    "capture:docs": "npm run package && node ./scripts/capture-docs-screenshots.mjs",
+    "vscode:prepublish": "npm run check:bundles",
+    "package": "npm run build && npm run check:bundles && npm run check:licenses && npm run check:package && npm run package:artifacts",
+    "package:artifacts": "node ./scripts/build-release-artifacts.mjs",
+    "package:list": "vsce ls --no-dependencies",
+    "audit": "npm audit --audit-level=moderate",
+    "audit:signatures": "npm audit signatures",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run generate:icon && npm run check:icon && npm run build && npm run check:bundles && npm run check:licenses && npm run check:package && npm run audit && npm run audit:signatures"
+  },
+  "dependencies": {
+    "vscode-languageclient": "10.1.0",
+    "vscode-languageserver": "10.1.0",
+    "vscode-languageserver-textdocument": "1.0.12",
+    "vscode-uri": "3.1.0"
+  },
+  "overrides": {
+    "cheerio": "1.0.0-rc.12",
+    "diff": "8.0.3",
+    "glob": "13.0.6",
+    "keytar": "npm:@github/keytar@7.10.6",
+    "serialize-javascript": "7.1.0"
+  },
+  "allowScripts": {
+    "@github/keytar@7.10.6": true,
+    "@playwright/browser-chromium@1.62.1": true,
+    "@vscode/vsce-sign@2.1.0": true,
+    "esbuild@0.28.2": true,
+    "sharp@0.35.3": true
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.13.3",
+    "@types/vscode": "1.102.0",
+    "@vitest/coverage-v8": "4.1.11",
+    "@vscode/test-cli": "0.0.15",
+    "@vscode/test-electron": "3.1.0",
+    "@vscode/test-web": "0.0.81",
+    "@vscode/vsce": "3.9.2",
+    "esbuild": "0.28.2",
+    "eslint": "10.9.0",
+    "fast-check": "4.9.0",
+    "glob": "13.0.6",
+    "ovsx": "1.1.1",
+    "playwright": "1.62.1",
+    "prettier": "3.9.6",
+    "prettier-plugin-astro": "0.14.1",
+    "sharp": "0.35.3",
+    "typescript": "npm:@typescript/typescript6@6.0.2",
+    "typescript-eslint": "8.67.0",
+    "vitest": "4.1.11",
+    "vscode-jsonrpc": "9.0.1",
+    "vscode-oniguruma": "2.0.1",
+    "vscode-textmate": "9.3.2",
+    "yauzl": "3.4.0"
+  }
+}

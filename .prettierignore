@@ -1,0 +1,9 @@
+dist
+node_modules
+.upstream
+.playwright-cli
+package-lock.json
+syntaxes/*.json
+snippets/*.json
+packages/language-core/src/generated
+test/fixtures/upstream
