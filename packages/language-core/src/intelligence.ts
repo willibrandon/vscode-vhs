@@ -82,7 +82,7 @@ export function hoverAt(document: VhsDocument, offset: number): HoverEntry | und
   if (command !== undefined) {
     return {
       title: command.name,
-      markdown: `**${command.syntax}**\n\n${command.description}\n\nAvailable since VHS ${command.since}.\n\n[Official documentation](${command.documentation})`,
+      markdown: `**\`${command.syntax}\`**\n\n${command.description}\n\nAvailable since VHS ${command.since}.\n\n[Official documentation](${command.documentation})`,
       range: token,
     };
   }
@@ -90,7 +90,7 @@ export function hoverAt(document: VhsDocument, offset: number): HoverEntry | und
   if (setting !== undefined) {
     return {
       title: setting.name,
-      markdown: `**${setting.syntax}**\n\n${setting.description}\n\nDefault: \`${setting.defaultValue}\`.\n\n[Official documentation](${setting.documentation})`,
+      markdown: `**\`${setting.syntax}\`**\n\n${setting.description}\n\nDefault: \`${setting.defaultValue}\`.\n\n[Official documentation](${setting.documentation})`,
       range: token,
     };
   }

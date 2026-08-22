@@ -115,7 +115,7 @@ export const WINDOW_BARS: readonly string[] = [
   "Rings",
   "RingsRight",
 ];
-export const THEMES: readonly string[] = themes.names;
+export const THEMES: readonly string[] = ["Charmbracelet", ...themes.names];
 
 export const SETTINGS: readonly SettingDefinition[] = [
   setting("Shell", "<Shell>", "Selects the terminal shell.", "shell", "bash", SHELLS),

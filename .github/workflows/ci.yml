@@ -1,0 +1,261 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Scan for secrets
+        uses: willibrandon/picket@4c9f7d28260bfe0a7334865c84db093519f6f57f # v0.2.12
+        with:
+          cache-mode: secret-hash-only
+          fail-on: findings
+          redact: 100
+          timeout: 300
+
+  quality:
+    name: Quality and bundles
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.19.0
+      - run: npm ci
+      - run: npm run verify
+      - name: Stage verified bundles
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: verified-bundles
+          path: |
+            dist/browser.js
+            dist/browserServer.js
+            dist/extension.cjs
+            dist/metafile.json
+            dist/nodeServer.cjs
+            dist/test/web/index.cjs
+          if-no-files-found: error
+          retention-days: 3
+
+  package:
+    name: Package exact VSIX
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.19.0
+      - run: npm ci
+      - name: Consume verified bundles
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: verified-bundles
+          path: dist
+      - run: npm run check:bundles
+      - run: npm run check:licenses
+      - run: npm run check:package
+      - run: npm run package:artifacts
+      - run: npm run check:release-reproducibility
+      - run: xvfb-run -a npm run test:vsix:prepared
+      - name: Stage candidate artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-candidate
+          path: |
+            dist/*.vsix
+            dist/*.sha256
+            dist/*.cdx.json
+          if-no-files-found: error
+          retention-days: 7
+
+  desktop:
+    name: Desktop (${{ matrix.os }}, VS Code ${{ matrix.vscode }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        vscode: [1.102.0, stable]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.19.0
+      - run: npm ci
+      - name: Test client process boundaries
+        run: npm test -- packages/vscode-client/test
+      - name: Test on Linux
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm run test:integration
+        env:
+          VSCODE_VERSION: ${{ matrix.vscode }}
+      - name: Test on macOS or Windows
+        if: runner.os != 'Linux'
+        run: npm run test:integration
+        env:
+          VSCODE_VERSION: ${{ matrix.vscode }}
+
+  web:
+    name: Browser Worker
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.19.0
+      - run: npm ci
+      - run: npm run test:web
+
+  upstream:
+    name: Pinned upstream conformance
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out extension source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check out pinned VHS source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: charmbracelet/vhs
+          ref: c6af91a25fed05852338a5ed58d9b099b8369a1e
+          path: .vhs-upstream
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check out pinned tree-sitter source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: charmbracelet/tree-sitter-vhs
+          ref: 0c6fae9d2cfc5b217bfd1fe84a7678f5917116db
+          path: .tree-sitter-upstream
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.19.0
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: 1.25.8
+          cache-dependency-path: .vhs-upstream/go.sum
+      - run: npm ci
+      - name: Verify pinned sources and generated data
+        run: |
+          npm run check:upstream
+          npm run fixtures:upstream
+          git diff --exit-code -- data test/fixtures/upstream
+        env:
+          VHS_UPSTREAM: ${{ github.workspace }}/.vhs-upstream
+          TREE_SITTER_VHS_UPSTREAM: ${{ github.workspace }}/.tree-sitter-upstream
+      - name: Run official VHS parser tests
+        working-directory: .vhs-upstream
+        run: go test ./lexer ./parser ./token
+      - name: Build pinned VHS
+        working-directory: .vhs-upstream
+        run: go build -o ../.cache/vhs ./
+      - name: Install pinned render tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes ffmpeg
+          mkdir -p "$RUNNER_TEMP/bin"
+          curl --fail --location --silent --show-error \
+            https://github.com/tsl0922/ttyd/releases/download/1.7.7/ttyd.x86_64 \
+            --output "$RUNNER_TEMP/bin/ttyd"
+          echo "8a217c968aba172e0dbf3f34447218dc015bc4d5e59bf51db2f2cd12b7be4f55  $RUNNER_TEMP/bin/ttyd" | sha256sum --check --strict
+          chmod 0755 "$RUNNER_TEMP/bin/ttyd"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: Run extension conformance tests
+        run: npm test -- test/upstream packages/vscode-client/test/runner.test.ts
+        env:
+          VHS_BIN: ${{ github.workspace }}/.cache/vhs
+          VHS_RENDER: "1"
+
+  insiders:
+    name: VS Code Insiders early warning
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.19.0
+      - run: npm ci
+      - run: xvfb-run -a npm run test:integration
+        env:
+          VSCODE_VERSION: insiders
+
+  remote_ssh:
+    name: Remote SSH host
+    needs: package
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.19.0
+      - run: npm ci
+      - name: Consume the exact release-candidate VSIX
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-candidate
+          path: dist
+      - run: npm run test:remote:prepared
+      - name: Upload remote extension-host evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: remote-ssh-smoke
+          path: dist/remote-smoke
+          if-no-files-found: error
+          retention-days: 7

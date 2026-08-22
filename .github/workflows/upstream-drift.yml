@@ -1,0 +1,104 @@
+name: Upstream drift
+
+on:
+  schedule:
+    - cron: "17 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Check out extension source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check out current VHS source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: charmbracelet/vhs
+          path: .vhs-upstream
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check out current tree-sitter source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: charmbracelet/tree-sitter-vhs
+          path: .tree-sitter-upstream
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.19.0
+          cache: npm
+      - run: npm ci
+      - name: Regenerate against current upstream heads
+        run: npm run fixtures:upstream
+        env:
+          VHS_UPSTREAM: ${{ github.workspace }}/.vhs-upstream
+          TREE_SITTER_VHS_UPSTREAM: ${{ github.workspace }}/.tree-sitter-upstream
+      - name: Record drift
+        id: drift
+        run: |
+          if git diff --quiet -- data test/fixtures/upstream; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          git diff -- data test/fixtures/upstream > upstream-drift.patch
+          git diff --stat -- data test/fixtures/upstream > upstream-drift.txt
+      - name: Upload drift
+        if: steps.drift.outputs.changed == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: upstream-drift-${{ github.run_id }}
+          path: |
+            upstream-drift.patch
+            upstream-drift.txt
+          if-no-files-found: error
+          retention-days: 30
+      - name: Create or update drift issue
+        if: steps.drift.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="[automated] Upstream VHS data changed"
+          issue=$(gh issue list --state open --limit 100 --json number,title --jq '[.[] | select(.title == "[automated] Upstream VHS data changed")][0].number // empty')
+          body=$(mktemp)
+          {
+            echo "Current VHS or tree-sitter sources changed the reviewed fixtures."
+            echo
+            cat upstream-drift.txt
+            echo
+            echo "Run: $RUN_URL"
+            echo "Download the patch and review it before updating any pin."
+          } > "$body"
+          if [[ -n "$issue" ]]; then
+            gh issue edit "$issue" --body-file "$body" --add-assignee willibrandon --add-label dependencies
+          else
+            gh issue create --title "$title" --body-file "$body" --assignee willibrandon --label dependencies
+          fi
+      - name: Close resolved drift issue
+        if: steps.drift.outputs.changed == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          issue=$(gh issue list --state open --limit 100 --json number,title --jq '[.[] | select(.title == "[automated] Upstream VHS data changed")][0].number // empty')
+          if [[ -n "$issue" ]]; then gh issue close "$issue" --comment "No fixture drift remains as of $RUN_URL."; fi
+      - name: Fail after reporting drift
+        if: steps.drift.outputs.changed == 'true'
+        run: exit 1

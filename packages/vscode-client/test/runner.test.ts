@@ -115,6 +115,25 @@ describe("VHS process runner", () => {
     expect(result.stdout).toHaveLength(1_048_576);
     expect(result.stderr).toHaveLength(1_048_576);
   });
+
+  it("stops a process at the configured timeout", async () => {
+    const started = performance.now();
+    const result = await runVhs(
+      {
+        arguments: ["-e", "setInterval(()=>{},1000)"],
+        command: process.execPath,
+        cwd: process.cwd(),
+        timeoutMs: 25,
+      },
+      new AbortController().signal,
+      () => true,
+    );
+    const elapsed = performance.now() - started;
+
+    expect(result).toMatchObject({ cancelled: true, code: null, signal: "SIGTERM" });
+    expect(result.durationMs).toBeGreaterThanOrEqual(20);
+    expect(elapsed).toBeLessThan(200);
+  });
 });
 
 async function waitForFile(path: string): Promise<void> {

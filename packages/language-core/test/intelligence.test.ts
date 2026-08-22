@@ -17,7 +17,8 @@ describe("language intelligence", () => {
 
     const themeDocument = parseVhs("Set Theme ");
     const themes = completionsAt(themeDocument, themeDocument.text.length);
-    expect(themes).toHaveLength(348);
+    expect(themes).toHaveLength(349);
+    expect(themes.some(({ label }) => label === "Charmbracelet")).toBe(true);
     expect(themes.map(({ label }) => label)).toContain("3024 Night");
   });
 
@@ -25,6 +26,8 @@ describe("language intelligence", () => {
     const document = parseVhs("Set TypingSpeed 50ms");
     expect(hoverAt(document, 5)?.markdown).toContain("Default: `50ms`");
     expect(hoverAt(document, 1)?.markdown).toContain("Changes a VHS recording setting");
+    const type = parseVhs('Type "hello"');
+    expect(hoverAt(type, 1)?.markdown).toContain("`Type[@<Duration>] <Text>`");
   });
 
   it("returns useful document symbols", () => {
