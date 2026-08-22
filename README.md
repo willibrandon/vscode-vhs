@@ -1,10 +1,20 @@
 # VHS
 
-Complete VHS tape support for Visual Studio Code.
+Language support for VHS tape files in Visual Studio Code.
+
+## Install
+
+Search for **VHS** in the Extensions view or run:
+
+```sh
+code --install-extension willibrandon.vhs
+```
 
 [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=willibrandon.vhs) ·
 [Open VSX](https://open-vsx.org/extension/willibrandon/vhs) ·
 [Documentation](https://willibrandon.github.io/vscode-vhs/)
+
+## Features
 
 - Highlighting, completion, hover help, diagnostics, and formatting
 - All VHS 0.11 commands, settings, shells, and built-in themes
