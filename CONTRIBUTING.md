@@ -7,4 +7,9 @@ npm ci
 npm run verify
 ```
 
-Keep changes focused and add tests for behavior changes.
+Add focused tests for behavior changes. Keep generated files, `plan.md`, and local scan output out
+of commits.
+
+See [testing](docs/testing.md), [architecture](docs/architecture.md),
+[upstream data](docs/upstream-data.md), and the
+[development container](docs/development-container.md).

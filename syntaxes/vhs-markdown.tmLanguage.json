@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "VHS Markdown",
+  "scopeName": "source.vhs.markdown",
+  "injectionSelector": "L:text.html.markdown",
+  "patterns": [
+    {
+      "name": "meta.embedded.block.vhs",
+      "begin": "(^|\\G)(\\s*)(`{3,}|~{3,})\\s*(?i:vhs|tape)(?:\\s+[^`]*)?$",
+      "beginCaptures": {
+        "3": { "name": "punctuation.definition.markdown" }
+      },
+      "end": "(^|\\G)(\\s*)(\\3)\\s*$",
+      "endCaptures": {
+        "3": { "name": "punctuation.definition.markdown" }
+      },
+      "contentName": "source.vhs",
+      "patterns": [{ "include": "source.vhs" }]
+    }
+  ]
+}
