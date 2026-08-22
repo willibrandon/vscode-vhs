@@ -60,6 +60,14 @@ try {
         viewport: { width: viewport.width, height: viewport.height },
       });
       await page.goto(`http://127.0.0.1:${address.port}${base}${route}`);
+      const sidebar = page.locator('nav.sidebar[aria-label="Main"]');
+      assert((await sidebar.count()) === 1, route + " does not use the standard docs sidebar");
+      const overviewLink = sidebar.locator(`a[href="${base}/"]`);
+      assert(
+        (await overviewLink.count()) === 1 &&
+          (await overviewLink.textContent())?.trim() === "Overview",
+        route + " does not include the Overview sidebar link",
+      );
       const sources = page.locator(".sl-markdown-content img[data-image-zoom]");
       const imageCount = await sources.count();
       assert(imageCount > 0, route + " has no popup image to verify");
@@ -202,7 +210,7 @@ try {
     }
   }
   console.log(
-    "Documentation examples use the exact packaged grammars, and every image popup uses the largest natural size that fits desktop, laptop, and mobile viewports without scrolling.",
+    "Documentation pages use the standard sidebar and exact packaged grammars, and every image popup uses the largest natural size that fits desktop, laptop, and mobile viewports without scrolling.",
   );
 } finally {
   await browser.close();
