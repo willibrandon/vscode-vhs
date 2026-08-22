@@ -30,6 +30,16 @@ jobs:
         with:
           node-version: 24.19.0
           cache: npm
+      - name: Install pinned VHS
+        run: |
+          curl --fail --location --silent --show-error \
+            https://github.com/charmbracelet/vhs/releases/download/v0.11.0/vhs_0.11.0_Linux_x86_64.tar.gz \
+            --output "$RUNNER_TEMP/vhs.tar.gz"
+          echo "99cb634587eaae0473c1ea377db80c3a048c27f99fe0a7febb1a1e8cb7ee5009  $RUNNER_TEMP/vhs.tar.gz" | sha256sum --check --strict
+          mkdir -p "$RUNNER_TEMP/vhs-bin"
+          tar --extract --gzip --file "$RUNNER_TEMP/vhs.tar.gz" --strip-components 1 \
+            --directory "$RUNNER_TEMP/vhs-bin" vhs_0.11.0_Linux_x86_64/vhs
+          echo "$RUNNER_TEMP/vhs-bin" >> "$GITHUB_PATH"
       - run: npm ci
       - run: npm run verify
       - name: Check release source

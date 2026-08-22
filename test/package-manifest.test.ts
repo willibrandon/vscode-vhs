@@ -35,7 +35,7 @@ describe("extension manifest", () => {
     const manifest = JSON.parse(await readFile("package.json", "utf8")) as PackageManifest;
     expect(manifest.name).toBe("vhs");
     expect(manifest.publisher).toBe("willibrandon");
-    expect(manifest.version).toBe("0.1.0");
+    expect(manifest.version).toBe("0.1.1");
     expect(manifest.activationEvents).toBeUndefined();
     expect(manifest.main).toBe("./dist/extension.cjs");
     expect(manifest.browser).toBe("./dist/browser.js");
