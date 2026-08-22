@@ -241,17 +241,16 @@ try {
     "/home/vscode/workspace",
     commandEnvironment,
   );
-  await waitFor(
-    async () => commandSucceeds("docker", ["exec", container, "test", "-f", resultPath]),
+  const result = await waitForValue(
+    async () => readContainerJson(container, resultPath),
     120_000,
     "remote extension-host assertions",
   );
-  await run("docker", [
-    "cp",
-    `${container}:${resultPath}`,
+  await writeFile(
     resolve(artifactDirectory, "result.json"),
-  ]);
-  const result = JSON.parse(await readFile(resolve(artifactDirectory, "result.json"), "utf8"));
+    `${JSON.stringify(result, undefined, 2)}\n`,
+    "utf8",
+  );
   validateResult(result);
   await copyLanguageServerLog(container, artifactDirectory);
   await writeFile(
@@ -539,6 +538,19 @@ async function commandSucceeds(command, arguments_) {
     return true;
   } catch {
     return false;
+  }
+}
+
+async function readContainerJson(containerName, path) {
+  try {
+    const { stdout } = await executeFile("docker", ["exec", containerName, "cat", path], {
+      cwd: root,
+      maxBuffer: 1024 * 1024,
+      timeout: 10_000,
+    });
+    return JSON.parse(stdout);
+  } catch {
+    return undefined;
   }
 }
 

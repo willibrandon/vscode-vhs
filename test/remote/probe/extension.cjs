@@ -93,9 +93,6 @@ exports.activate = async function activate() {
     resultUri,
     Buffer.from(`${JSON.stringify(result, null, 2)}\n`),
   );
-  setTimeout(() => {
-    void vscode.commands.executeCommand("workbench.action.quit");
-  }, 100);
 };
 
 function diagnosticCode(diagnostic) {
