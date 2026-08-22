@@ -127,7 +127,7 @@ exports.run = async function run() {
       (value) => value.length > 0,
       "run working directory",
     );
-    assert.equal(path.resolve(runCwd), path.resolve(root.fsPath));
+    assert.equal(await fs.realpath(runCwd), await fs.realpath(root.fsPath));
 
     await vscode.commands.executeCommand("vhs.validateWithInstalledVhs");
     const validateCwd = await waitFor(
@@ -135,7 +135,7 @@ exports.run = async function run() {
       (value) => value.length > 0,
       "validation working directory",
     );
-    assert.equal(path.resolve(validateCwd), path.resolve(root.fsPath));
+    assert.equal(await fs.realpath(validateCwd), await fs.realpath(root.fsPath));
   } finally {
     await configuration.update(
       "executablePath",
