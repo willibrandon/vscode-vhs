@@ -107,12 +107,13 @@ describe("development container", () => {
   });
 
   it("runs the full editor and real-VHS matrix", async () => {
-    const [configText, manifestText, postCreate, proxy, verify] = await Promise.all([
+    const [configText, manifestText, postCreate, proxy, verify, vitest] = await Promise.all([
       readFile(resolve(root, ".devcontainer/devcontainer.json"), "utf8"),
       readFile(resolve(root, "package.json"), "utf8"),
       readFile(resolve(root, ".devcontainer/post-create.sh"), "utf8"),
       readFile(resolve(root, ".devcontainer/start-docker-proxy.sh"), "utf8"),
       readFile(resolve(root, ".devcontainer/verify.sh"), "utf8"),
+      readFile(resolve(root, "vitest.config.mts"), "utf8"),
     ]);
     const config = JSON.parse(configText) as DevContainer;
     const manifest = JSON.parse(manifestText) as PackageManifest;
@@ -145,6 +146,7 @@ describe("development container", () => {
     }
     expect(verify).toContain("mountpoint --quiet");
     expect(verify).toContain("docker version");
+    expect(vitest).toContain('reportsDirectory: "coverage/report"');
     expect(proxy).toContain("UNIX-LISTEN:$target_socket");
     expect(proxy).toContain("UNIX-CONNECT:$source_socket");
     expect(proxy).not.toMatch(/ch(?:mod|own).*docker-host\.sock/u);
