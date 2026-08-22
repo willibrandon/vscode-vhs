@@ -6,6 +6,18 @@ import { promisify } from "node:util";
 
 const execute = promisify(execFile);
 const root = resolve(import.meta.dirname, "..");
+const expectedRegistryIdentity = Object.freeze({ name: "vhs-tape", publisher: "willibrandon" });
+const openVsxIdentityUrl = new URL("https://open-vsx.org/api/willibrandon/vhs-tape");
+
+export function manifestIdentityFailures(manifest, expected) {
+  if (typeof manifest !== "object" || manifest === null) {
+    return ["package.json returned an unexpected value."];
+  }
+  if (manifest.publisher !== expected.publisher || manifest.name !== expected.name) {
+    return [`package.json must identify ${expected.publisher}.${expected.name}.`];
+  }
+  return [];
+}
 
 export function marketplaceIdentityFailures(entries, expected) {
   if (!Array.isArray(entries)) return ["Marketplace search returned an unexpected response."];
@@ -47,12 +59,8 @@ async function searchMarketplace(name) {
   return JSON.parse(response);
 }
 
-async function queryOpenVsx(expected) {
-  const url = new URL(
-    `/api/${encodeURIComponent(expected.publisher)}/${encodeURIComponent(expected.name)}`,
-    "https://open-vsx.org",
-  );
-  const response = await fetch(url, {
+async function queryOpenVsx() {
+  const response = await fetch(openVsxIdentityUrl, {
     headers: { accept: "application/json" },
     signal: AbortSignal.timeout(60_000),
   });
@@ -64,10 +72,14 @@ async function queryOpenVsx(expected) {
 
 async function checkRegistryIdentity() {
   const manifest = JSON.parse(await readFile(resolve(root, "package.json"), "utf8"));
-  const expected = { name: manifest.name, publisher: manifest.publisher };
+  const expected = expectedRegistryIdentity;
+  const manifestFailures = manifestIdentityFailures(manifest, expected);
+  if (manifestFailures.length > 0) {
+    throw new Error(`Registry identity check failed:\n- ${manifestFailures.join("\n- ")}`);
+  }
   const [marketplace, openVsx] = await Promise.all([
     searchMarketplace(expected.name),
-    queryOpenVsx(expected),
+    queryOpenVsx(),
   ]);
   const failures = [
     ...marketplaceIdentityFailures(marketplace, expected),

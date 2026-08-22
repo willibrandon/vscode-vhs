@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  manifestIdentityFailures,
   marketplaceIdentityFailures,
   openVsxIdentityFailures,
 } from "../../scripts/check-registry-identity.mjs";
@@ -7,6 +8,13 @@ import {
 const expected = { name: "vhs-tape", publisher: "willibrandon" };
 
 describe("registry identity checks", () => {
+  it("requires the fixed package identity before making registry requests", () => {
+    expect(manifestIdentityFailures(expected, expected)).toEqual([]);
+    expect(manifestIdentityFailures({ name: "vhs", publisher: "willibrandon" }, expected)).toEqual([
+      "package.json must identify willibrandon.vhs-tape.",
+    ]);
+  });
+
   it("rejects an exact Marketplace package owned by another publisher", () => {
     expect(
       marketplaceIdentityFailures(
