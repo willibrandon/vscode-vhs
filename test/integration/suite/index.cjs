@@ -118,8 +118,16 @@ exports.run = async function run() {
   assert.ok(!runtimeDiagnostics.some((item) => item.severity === vscode.DiagnosticSeverity.Error));
 
   const fakeVhs = await createFakeVhs(root.fsPath);
+  const previousNodeOptions = process.env.NODE_OPTIONS;
+  process.env.NODE_OPTIONS = [previousNodeOptions, `--require=${fakeVhs.hook}`]
+    .filter(Boolean)
+    .join(" ");
   const configuration = vscode.workspace.getConfiguration("vhs", runtimeUri);
-  await configuration.update("executablePath", fakeVhs, vscode.ConfigurationTarget.WorkspaceFolder);
+  await configuration.update(
+    "executablePath",
+    fakeVhs.command,
+    vscode.ConfigurationTarget.WorkspaceFolder,
+  );
   try {
     await vscode.commands.executeCommand("vhs.runTape");
     const runCwd = await waitFor(
@@ -137,6 +145,8 @@ exports.run = async function run() {
     );
     assert.equal(await fs.realpath(validateCwd), await fs.realpath(root.fsPath));
   } finally {
+    if (previousNodeOptions === undefined) delete process.env.NODE_OPTIONS;
+    else process.env.NODE_OPTIONS = previousNodeOptions;
     await configuration.update(
       "executablePath",
       undefined,
@@ -169,21 +179,21 @@ exports.run = async function run() {
 };
 
 async function createFakeVhs(root) {
-  const script = path.join(root, "fake-vhs.cjs");
-  const source = `#!/usr/bin/env node
+  const hook = path.join(root, "fake-vhs-hook.cjs");
+  const source = `
 const fs = require("node:fs");
-const name = process.argv[2] === "validate" ? "validate-cwd.txt" : "run-cwd.txt";
-process.stdin.resume();
-process.stdin.on("end", () => fs.writeFileSync(name, process.cwd()));
+const path = require("node:path");
+const command = process.argv[1] === "-" ? "-" : path.basename(process.argv[1] ?? "");
+if (command === "-" || command === "validate") {
+  const name = command === "validate" ? "validate-cwd.txt" : "run-cwd.txt";
+  fs.writeFileSync(name, process.cwd());
+  process.exit(0);
+}
 `;
-  await fs.writeFile(script, source, "utf8");
-  if (process.platform !== "win32") {
-    await fs.chmod(script, 0o755);
-    return script;
-  }
-  const wrapper = path.join(root, "fake-vhs.cmd");
-  await fs.writeFile(wrapper, `@node "%~dp0fake-vhs.cjs" %*\r\n`, "utf8");
-  return wrapper;
+  await fs.writeFile(hook, source, "utf8");
+  const command = process.env.VHS_TEST_NODE_PATH;
+  assert.ok(command, "The test Node executable must be provided.");
+  return { command, hook };
 }
 
 async function readOptional(uri) {
