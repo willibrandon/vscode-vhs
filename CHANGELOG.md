@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.3] - 2026-08-28
+
+- Automatic tape discovery now respects VS Code `files.exclude`, nested `.gitignore` rules, and
+  common generated-output directories.
+- Explicitly opened tapes and explicit `Source` targets remain available even when ambient discovery
+  excludes their directories.
+- Added the default-on `vhs.index.useIgnoreFiles` setting, live exclusion refreshes, cross-platform
+  regression coverage, and matching README and documentation-site guidance.
+
 ## [0.1.2] - 2026-08-22
 
 - Added complete VHS 0.11 syntax highlighting and language support.
