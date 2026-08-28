@@ -8,6 +8,8 @@
   excludes their directories.
 - Added the default-on `vhs.index.useIgnoreFiles` setting, live exclusion refreshes, cross-platform
   regression coverage, and matching README and documentation-site guidance.
+- Made root `.gitignore` refreshes resilient to dropped recursive watcher events during workspace
+  startup, while also refreshing directly for in-editor ignore-file changes.
 
 ## [0.1.2] - 2026-08-22
 
