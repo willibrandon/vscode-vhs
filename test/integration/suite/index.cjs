@@ -55,10 +55,18 @@ exports.run = async function run() {
       uri,
       new vscode.Position(10, 10),
     );
+  const visibleAfterActivationUri = vscode.Uri.joinPath(root, "visible-after-activation.tape");
+  await vscode.workspace.fs.writeFile(
+    visibleAfterActivationUri,
+    new TextEncoder().encode('Source parts.tape\nType "visible"\n'),
+  );
   await waitFor(
     readPartReferences,
-    (locations) => locations.some((location) => location.uri.toString() === uri.toString()),
-    "initial VHS workspace index",
+    (locations) =>
+      locations.some(
+        (location) => location.uri.toString() === visibleAfterActivationUri.toString(),
+      ),
+    "post-activation VHS workspace refresh",
   );
   let partReferences = await readPartReferences();
   assert.equal(
