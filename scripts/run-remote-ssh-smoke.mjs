@@ -252,6 +252,11 @@ try {
     "utf8",
   );
   validateResult(result);
+  // The remote probe can finish before VS Code has materialized or flushed the language-client
+  // output channel. Stop the remote window before collecting its log so the artifact is complete
+  // and the smoke test does not race output-channel persistence.
+  await stop(smokeProcess);
+  smokeProcess = undefined;
   await copyLanguageServerLog(container, artifactDirectory);
   await writeFile(
     resolve(artifactDirectory, "environment.json"),
