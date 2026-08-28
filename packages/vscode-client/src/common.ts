@@ -1,7 +1,7 @@
 import { parseVhs } from "@vhs/language-core";
 import * as vscode from "vscode";
 import type { BaseLanguageClient, LanguageClientOptions } from "vscode-languageclient";
-import { loadWorkspaceExclusions } from "./workspace-exclusions.js";
+import { loadRootIgnoreSignature, loadWorkspaceExclusions } from "./workspace-exclusions.js";
 
 export const VHS_LANGUAGE_IDS: readonly string[] = ["vhs"];
 
@@ -43,6 +43,7 @@ interface WorkspaceFile {
 interface WorkspaceSnapshot {
   readonly files: readonly WorkspaceFile[];
   readonly missing: readonly string[];
+  readonly rootIgnoreSignature: string;
 }
 
 export function registerWorkspaceSynchronization(
@@ -52,10 +53,13 @@ export function registerWorkspaceSynchronization(
 ): () => Promise<void> {
   let generation = 0;
   let debounce: ReturnType<typeof setTimeout> | undefined;
+  let checkingRootIgnore = false;
+  let lastRootIgnoreSignature: string | undefined;
   const refresh = async (): Promise<void> => {
     const current = ++generation;
-    const { files, missing } = await workspaceFiles();
+    const { files, missing, rootIgnoreSignature } = await workspaceFiles();
     if (current !== generation) return;
+    lastRootIgnoreSignature = rootIgnoreSignature;
     const roots = vscode.workspace.workspaceFolders?.map(({ uri }) => uri.toString()) ?? [];
     await client.sendNotification("vhs/workspaceFiles", { files, missing, roots });
     output.debug(`Indexed ${files.length} VHS tape files.`);
@@ -67,6 +71,34 @@ export function registerWorkspaceSynchronization(
       void refresh();
     }, 150);
   };
+  const checkRootIgnore = async (): Promise<void> => {
+    if (checkingRootIgnore) return;
+    checkingRootIgnore = true;
+    try {
+      const signature = await loadRootIgnoreSignature("vhs");
+      if (lastRootIgnoreSignature !== undefined && signature !== lastRootIgnoreSignature)
+        schedule();
+    } finally {
+      checkingRootIgnore = false;
+    }
+  };
+  let rootIgnorePoll: ReturnType<typeof setInterval> | undefined;
+  let rootIgnorePollExpiry: ReturnType<typeof setTimeout> | undefined;
+  const stopRootIgnorePolling = (): void => {
+    if (rootIgnorePoll !== undefined) clearInterval(rootIgnorePoll);
+    if (rootIgnorePollExpiry !== undefined) clearTimeout(rootIgnorePollExpiry);
+    rootIgnorePoll = undefined;
+    rootIgnorePollExpiry = undefined;
+  };
+  const startRootIgnorePolling = (): void => {
+    stopRootIgnorePolling();
+    rootIgnorePoll = setInterval(() => void checkRootIgnore(), 1_000);
+    rootIgnorePollExpiry = setTimeout(stopRootIgnorePolling, 30_000);
+  };
+  // VS Code's macOS watcher can occasionally drop a root .gitignore write while a workspace is
+  // settling. Briefly reading only the root ignore files provides a cheap repair path without
+  // permanently polling or periodically re-indexing every tape file.
+  startRootIgnorePolling();
   const watcher = vscode.workspace.createFileSystemWatcher("**/*.tape");
   const ignoreWatcher = vscode.workspace.createFileSystemWatcher("**/.gitignore");
   const rootIgnoreWatchers = new Map<string, vscode.Disposable>();
@@ -114,6 +146,7 @@ export function registerWorkspaceSynchronization(
         rootIgnoreWatchers.delete(folder.uri.toString());
       }
       for (const folder of added) watchRootIgnoreFile(folder);
+      if (added.length > 0) startRootIgnorePolling();
       schedule();
     }),
     vscode.workspace.onDidChangeConfiguration((event) => {
@@ -128,6 +161,7 @@ export function registerWorkspaceSynchronization(
       dispose(): void {
         generation += 1;
         if (debounce !== undefined) clearTimeout(debounce);
+        stopRootIgnorePolling();
         for (const watcher of rootIgnoreWatchers.values()) watcher.dispose();
         rootIgnoreWatchers.clear();
       },
@@ -196,6 +230,7 @@ async function workspaceFiles(): Promise<WorkspaceSnapshot> {
   return {
     files: files.sort((left, right) => left.uri.localeCompare(right.uri)),
     missing: [...missing].sort(),
+    rootIgnoreSignature: exclusions.rootIgnoreSignature,
   };
 }
 
