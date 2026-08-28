@@ -9,8 +9,8 @@
 - Added the default-on `vhs.index.useIgnoreFiles` setting, live exclusion refreshes, cross-platform
   regression coverage, and matching README and documentation-site guidance.
 - Made root `.gitignore` refreshes resilient to dropped watcher events during workspace startup with
-  dedicated watchers, a lightweight root-file fingerprint fallback, and direct refreshes for
-  in-editor ignore-file changes.
+  dedicated watchers, a bounded root-file fingerprint fallback while workspaces settle, and direct
+  refreshes for in-editor ignore-file changes.
 
 ## [0.1.2] - 2026-08-22
 

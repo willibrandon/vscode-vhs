@@ -82,10 +82,23 @@ export function registerWorkspaceSynchronization(
       checkingRootIgnore = false;
     }
   };
+  let rootIgnorePoll: ReturnType<typeof setInterval> | undefined;
+  let rootIgnorePollExpiry: ReturnType<typeof setTimeout> | undefined;
+  const stopRootIgnorePolling = (): void => {
+    if (rootIgnorePoll !== undefined) clearInterval(rootIgnorePoll);
+    if (rootIgnorePollExpiry !== undefined) clearTimeout(rootIgnorePollExpiry);
+    rootIgnorePoll = undefined;
+    rootIgnorePollExpiry = undefined;
+  };
+  const startRootIgnorePolling = (): void => {
+    stopRootIgnorePolling();
+    rootIgnorePoll = setInterval(() => void checkRootIgnore(), 1_000);
+    rootIgnorePollExpiry = setTimeout(stopRootIgnorePolling, 30_000);
+  };
   // VS Code's macOS watcher can occasionally drop a root .gitignore write while a workspace is
-  // settling. Reading only the root ignore files provides a cheap repair path without periodically
-  // re-indexing every tape file.
-  const rootIgnorePoll = setInterval(() => void checkRootIgnore(), 1_000);
+  // settling. Briefly reading only the root ignore files provides a cheap repair path without
+  // permanently polling or periodically re-indexing every tape file.
+  startRootIgnorePolling();
   const watcher = vscode.workspace.createFileSystemWatcher("**/*.tape");
   const ignoreWatcher = vscode.workspace.createFileSystemWatcher("**/.gitignore");
   const rootIgnoreWatchers = new Map<string, vscode.Disposable>();
@@ -133,6 +146,7 @@ export function registerWorkspaceSynchronization(
         rootIgnoreWatchers.delete(folder.uri.toString());
       }
       for (const folder of added) watchRootIgnoreFile(folder);
+      if (added.length > 0) startRootIgnorePolling();
       schedule();
     }),
     vscode.workspace.onDidChangeConfiguration((event) => {
@@ -147,7 +161,7 @@ export function registerWorkspaceSynchronization(
       dispose(): void {
         generation += 1;
         if (debounce !== undefined) clearTimeout(debounce);
-        clearInterval(rootIgnorePoll);
+        stopRootIgnorePolling();
         for (const watcher of rootIgnoreWatchers.values()) watcher.dispose();
         rootIgnoreWatchers.clear();
       },
