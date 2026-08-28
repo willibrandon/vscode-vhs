@@ -1,6 +1,7 @@
 import { parseVhs } from "@vhs/language-core";
 import * as vscode from "vscode";
 import type { BaseLanguageClient, LanguageClientOptions } from "vscode-languageclient";
+import { loadWorkspaceExclusions } from "./workspace-exclusions.js";
 
 export const VHS_LANGUAGE_IDS: readonly string[] = ["vhs"];
 
@@ -67,11 +68,16 @@ export function registerWorkspaceSynchronization(
     }, 150);
   };
   const watcher = vscode.workspace.createFileSystemWatcher("**/*.tape");
+  const ignoreWatcher = vscode.workspace.createFileSystemWatcher("**/.gitignore");
   context.subscriptions.push(
     watcher,
+    ignoreWatcher,
     watcher.onDidCreate(schedule),
     watcher.onDidChange(schedule),
     watcher.onDidDelete(schedule),
+    ignoreWatcher.onDidCreate(schedule),
+    ignoreWatcher.onDidChange(schedule),
+    ignoreWatcher.onDidDelete(schedule),
     vscode.workspace.onDidOpenTextDocument((document) => {
       if (document.languageId === "vhs") schedule();
     }),
@@ -82,6 +88,14 @@ export function registerWorkspaceSynchronization(
       if (document.languageId === "vhs") schedule();
     }),
     vscode.workspace.onDidChangeWorkspaceFolders(schedule),
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (
+        event.affectsConfiguration("vhs.index.useIgnoreFiles") ||
+        event.affectsConfiguration("files.exclude")
+      ) {
+        schedule();
+      }
+    }),
     {
       dispose(): void {
         generation += 1;
@@ -94,10 +108,9 @@ export function registerWorkspaceSynchronization(
 }
 
 async function workspaceFiles(): Promise<WorkspaceSnapshot> {
-  const discovered = await vscode.workspace.findFiles(
-    "**/*.tape",
-    "**/{.git,node_modules,.cache,dist,coverage}/**",
-    2_000,
+  const exclusions = await loadWorkspaceExclusions("vhs");
+  const discovered = (await vscode.workspace.findFiles("**/*.tape", undefined, 2_000)).filter(
+    (uri) => !exclusions.excludes(uri),
   );
   const open = new Map(
     vscode.workspace.textDocuments
