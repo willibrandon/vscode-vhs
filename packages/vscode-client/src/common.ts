@@ -69,6 +69,27 @@ export function registerWorkspaceSynchronization(
   };
   const watcher = vscode.workspace.createFileSystemWatcher("**/*.tape");
   const ignoreWatcher = vscode.workspace.createFileSystemWatcher("**/.gitignore");
+  const rootIgnoreWatchers = new Map<string, vscode.Disposable>();
+  const watchRootIgnoreFile = (folder: vscode.WorkspaceFolder): void => {
+    const key = folder.uri.toString();
+    if (rootIgnoreWatchers.has(key)) return;
+    // A simple RelativePattern uses a dedicated non-recursive watcher. Keep it alongside the
+    // recursive watcher so root .gitignore writes are not lost while a newly opened workspace is
+    // still settling (notably on macOS).
+    const rootIgnoreWatcher = vscode.workspace.createFileSystemWatcher(
+      new vscode.RelativePattern(folder, ".gitignore"),
+    );
+    rootIgnoreWatchers.set(
+      key,
+      vscode.Disposable.from(
+        rootIgnoreWatcher,
+        rootIgnoreWatcher.onDidCreate(schedule),
+        rootIgnoreWatcher.onDidChange(schedule),
+        rootIgnoreWatcher.onDidDelete(schedule),
+      ),
+    );
+  };
+  for (const folder of vscode.workspace.workspaceFolders ?? []) watchRootIgnoreFile(folder);
   context.subscriptions.push(
     watcher,
     ignoreWatcher,
@@ -82,12 +103,19 @@ export function registerWorkspaceSynchronization(
       if (document.languageId === "vhs") schedule();
     }),
     vscode.workspace.onDidChangeTextDocument(({ document }) => {
-      if (document.languageId === "vhs") schedule();
+      if (document.languageId === "vhs" || isGitIgnoreUri(document.uri)) schedule();
     }),
     vscode.workspace.onDidSaveTextDocument((document) => {
-      if (document.languageId === "vhs") schedule();
+      if (document.languageId === "vhs" || isGitIgnoreUri(document.uri)) schedule();
     }),
-    vscode.workspace.onDidChangeWorkspaceFolders(schedule),
+    vscode.workspace.onDidChangeWorkspaceFolders(({ added, removed }) => {
+      for (const folder of removed) {
+        rootIgnoreWatchers.get(folder.uri.toString())?.dispose();
+        rootIgnoreWatchers.delete(folder.uri.toString());
+      }
+      for (const folder of added) watchRootIgnoreFile(folder);
+      schedule();
+    }),
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (
         event.affectsConfiguration("vhs.index.useIgnoreFiles") ||
@@ -100,11 +128,17 @@ export function registerWorkspaceSynchronization(
       dispose(): void {
         generation += 1;
         if (debounce !== undefined) clearTimeout(debounce);
+        for (const watcher of rootIgnoreWatchers.values()) watcher.dispose();
+        rootIgnoreWatchers.clear();
       },
     },
   );
   void refresh();
   return refresh;
+}
+
+function isGitIgnoreUri(uri: vscode.Uri): boolean {
+  return uri.path.replaceAll("\\", "/").endsWith("/.gitignore");
 }
 
 async function workspaceFiles(): Promise<WorkspaceSnapshot> {
