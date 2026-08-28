@@ -11,6 +11,28 @@ exports.run = async function run() {
   assert.ok(root, "The fixture workspace must be open.");
   const extension = vscode.extensions.getExtension(extensionId);
   assert.ok(extension, extensionId + " must be installed.");
+  const ignoreUri = vscode.Uri.joinPath(root, ".gitignore");
+  const ignoredDirectory = vscode.Uri.joinPath(root, "artifacts");
+  const ignoredUri = vscode.Uri.joinPath(ignoredDirectory, "ignored.tape");
+  await vscode.workspace.fs.createDirectory(ignoredDirectory);
+  await vscode.workspace.fs.writeFile(ignoreUri, new TextEncoder().encode("artifacts/\n"));
+  await vscode.workspace.fs.writeFile(
+    ignoredUri,
+    new TextEncoder().encode('Source parts.tape\nType "ignored"\n'),
+  );
+  const vscodeExcludedDirectory = vscode.Uri.joinPath(root, "excluded-by-vscode");
+  const vscodeExcludedUri = vscode.Uri.joinPath(vscodeExcludedDirectory, "excluded.tape");
+  await vscode.workspace.fs.createDirectory(vscodeExcludedDirectory);
+  await vscode.workspace.fs.writeFile(
+    vscodeExcludedUri,
+    new TextEncoder().encode('Source parts.tape\nType "excluded"\n'),
+  );
+  const filesConfiguration = vscode.workspace.getConfiguration("files", vscodeExcludedUri);
+  await filesConfiguration.update(
+    "exclude",
+    { "**/excluded-by-vscode": true },
+    vscode.ConfigurationTarget.Workspace,
+  );
   const uri = vscode.Uri.joinPath(root, "demo.tape");
   const document = await vscode.workspace.openTextDocument(uri);
   await vscode.window.showTextDocument(document);
@@ -26,6 +48,111 @@ exports.run = async function run() {
     );
     assert.ok(extension.extensionPath.startsWith(installedPathPrefix));
   }
+
+  const readPartReferences = () =>
+    vscode.commands.executeCommand(
+      "vscode.executeReferenceProvider",
+      uri,
+      new vscode.Position(10, 10),
+    );
+  await waitFor(
+    readPartReferences,
+    (locations) => locations.some((location) => location.uri.toString() === uri.toString()),
+    "initial VHS workspace index",
+  );
+  let partReferences = await readPartReferences();
+  assert.equal(
+    partReferences.some((location) => location.uri.toString() === ignoredUri.toString()),
+    false,
+    "Git-ignored tapes must stay out of ambient workspace indexing.",
+  );
+  assert.equal(
+    partReferences.some((location) => location.uri.toString() === vscodeExcludedUri.toString()),
+    false,
+    "files.exclude entries must stay out of ambient workspace indexing.",
+  );
+
+  await vscode.workspace.fs.writeFile(ignoreUri, new TextEncoder().encode(""));
+  await waitFor(
+    readPartReferences,
+    (locations) => locations.some((location) => location.uri.toString() === ignoredUri.toString()),
+    "tape to enter the index after .gitignore changes",
+  );
+  await vscode.workspace.fs.writeFile(ignoreUri, new TextEncoder().encode("artifacts/\n"));
+  await waitFor(
+    readPartReferences,
+    (locations) => locations.every((location) => location.uri.toString() !== ignoredUri.toString()),
+    "tape to leave the index after .gitignore changes",
+  );
+
+  const indexConfiguration = vscode.workspace.getConfiguration("vhs", ignoredUri);
+  await indexConfiguration.update(
+    "index.useIgnoreFiles",
+    false,
+    vscode.ConfigurationTarget.WorkspaceFolder,
+  );
+  await waitFor(
+    readPartReferences,
+    (locations) => locations.some((location) => location.uri.toString() === ignoredUri.toString()),
+    "ignored tape to enter the index when Git ignore filtering is disabled",
+  );
+  await indexConfiguration.update(
+    "index.useIgnoreFiles",
+    true,
+    vscode.ConfigurationTarget.WorkspaceFolder,
+  );
+  await waitFor(
+    readPartReferences,
+    (locations) => locations.every((location) => location.uri.toString() !== ignoredUri.toString()),
+    "ignored tape to leave the index when Git ignore filtering is restored",
+  );
+
+  await filesConfiguration.update(
+    "exclude",
+    { "**/excluded-by-vscode": false },
+    vscode.ConfigurationTarget.Workspace,
+  );
+  await waitFor(
+    readPartReferences,
+    (locations) =>
+      locations.some((location) => location.uri.toString() === vscodeExcludedUri.toString()),
+    "tape to enter the index after files.exclude changes",
+  );
+  await filesConfiguration.update(
+    "exclude",
+    { "**/excluded-by-vscode": true },
+    vscode.ConfigurationTarget.Workspace,
+  );
+  await waitFor(
+    readPartReferences,
+    (locations) =>
+      locations.every((location) => location.uri.toString() !== vscodeExcludedUri.toString()),
+    "tape to leave the index after files.exclude changes",
+  );
+
+  const explicitUri = vscode.Uri.joinPath(root, "explicit-source.tape");
+  await vscode.workspace.fs.writeFile(
+    explicitUri,
+    new TextEncoder().encode("Source artifacts/ignored.tape\n"),
+  );
+  const explicitDocument = await vscode.workspace.openTextDocument(explicitUri);
+  await vscode.window.showTextDocument(explicitDocument);
+  const ignoredDefinition = await waitFor(
+    () =>
+      vscode.commands.executeCommand(
+        "vscode.executeDefinitionProvider",
+        explicitUri,
+        new vscode.Position(0, 17),
+      ),
+    (locations) => locations[0]?.uri.toString() === ignoredUri.toString(),
+    "explicit Source to retain its Git-ignored target",
+  );
+  assert.equal(ignoredDefinition[0]?.uri.toString(), ignoredUri.toString());
+  await waitFor(
+    readPartReferences,
+    (locations) => locations.some((location) => location.uri.toString() === ignoredUri.toString()),
+    "explicitly sourced ignored tape to participate in language features",
+  );
 
   const completion = await vscode.commands.executeCommand(
     "vscode.executeCompletionItemProvider",

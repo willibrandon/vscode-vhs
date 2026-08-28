@@ -71,6 +71,10 @@ describe("extension manifest", () => {
       default: "off",
       type: "string",
     });
+    expect(properties?.["vhs.index.useIgnoreFiles"]).toMatchObject({
+      default: true,
+      type: "boolean",
+    });
     expect(manifest.contributes?.configurationDefaults).toBeUndefined();
     expect(manifest.contributes?.views).toBeUndefined();
     expect(manifest.contributes?.viewsContainers).toBeUndefined();

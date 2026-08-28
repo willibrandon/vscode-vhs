@@ -7,5 +7,5 @@
     "tsBuildInfoFile": "../../node_modules/.cache/vscode-client.tsbuildinfo",
     "types": ["vscode"]
   },
-  "include": ["src/common.ts"]
+  "include": ["src/common.ts", "src/git-ignore.ts", "src/workspace-exclusions.ts"]
 }

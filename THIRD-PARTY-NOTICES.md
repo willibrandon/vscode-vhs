@@ -6,6 +6,7 @@ The extension bundles these npm packages:
 | ----------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------- |
 | balanced-match@4.0.4                      | MIT           | [balanced-match-4.0.4.txt](LICENSES/balanced-match-4.0.4.txt)                                           |
 | brace-expansion@5.0.9                     | MIT           | [brace-expansion-5.0.9.txt](LICENSES/brace-expansion-5.0.9.txt)                                         |
+| ignore@7.0.6                              | MIT           | [ignore-7.0.6.txt](LICENSES/ignore-7.0.6.txt)                                                           |
 | minimatch@10.2.6                          | BlueOak-1.0.0 | [minimatch-10.2.6.txt](LICENSES/minimatch-10.2.6.txt)                                                   |
 | semver@7.8.5                              | ISC           | [semver-7.8.5.txt](LICENSES/semver-7.8.5.txt)                                                           |
 | vscode-jsonrpc@9.0.1                      | MIT           | [vscode-jsonrpc-9.0.1.txt](LICENSES/vscode-jsonrpc-9.0.1.txt)                                           |

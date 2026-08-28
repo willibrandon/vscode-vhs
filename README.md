@@ -19,6 +19,7 @@ code --install-extension willibrandon.vhs-tape
 - Highlighting, completion, hover help, diagnostics, and formatting
 - All VHS 0.11 commands, settings, shells, and built-in themes
 - Source navigation, references, rename updates, symbols, and folding
+- Workspace indexing that respects `files.exclude` and `.gitignore` without hiding explicit sources
 - Trusted tape runs, installed VHS validation, cancellation, and output logs
 - GIF, video, text, frame, and screenshot previews
 - Desktop, remote, and browser language support

@@ -221,6 +221,12 @@
           "pattern": "^(latest|auto|v?[0-9]+\\.[0-9]+\\.[0-9]+)$",
           "description": "VHS version used for language checks."
         },
+        "vhs.index.useIgnoreFiles": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "Exclude files matched by workspace .gitignore files from automatic indexing. Explicitly opened and sourced tapes remain available."
+        },
         "vhs.externalValidation.mode": {
           "type": "string",
           "default": "off",
@@ -294,6 +300,7 @@
     "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run generate:icon && npm run check:icon && npm run build && npm run check:bundles && npm run check:licenses && npm run check:package && npm run audit && npm run audit:signatures"
   },
   "dependencies": {
+    "ignore": "7.0.6",
     "vscode-languageclient": "10.1.0",
     "vscode-languageserver": "10.1.0",
     "vscode-languageserver-textdocument": "1.0.12",
