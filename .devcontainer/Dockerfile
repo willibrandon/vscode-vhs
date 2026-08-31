@@ -5,7 +5,7 @@ RUN npm install --global npm@12.0.2 \
 
 FROM docker:29.7.2-cli@sha256:000bb62ff495f986c9f5578eb67cc2cb98b91138eda81d7762d5371eb8a497fe AS docker-toolchain
 
-FROM mcr.microsoft.com/devcontainers/base:2-trixie@sha256:025b74bb5f7ac53edd77e01aa7188c359aab100e23a2f6220bde50bbb9fd31dd
+FROM mcr.microsoft.com/devcontainers/base:2-trixie@sha256:b8c3669fb4cc652621b3386517c40ab3e151e827de958d6fe75528798ffb5727
 
 ARG TARGETARCH
 
