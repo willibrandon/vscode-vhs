@@ -30,6 +30,7 @@ jobs:
           node-version: 24.19.0
           cache: npm
       - run: npm ci
+      - run: npm exec -- playwright install chromium
       - name: Build and upload docs
         uses: withastro/action@e84f40bd8d2caa9e768ec82ad30dd81f0b280853 # v6.1.2
         with:
