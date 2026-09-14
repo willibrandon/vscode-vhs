@@ -41,6 +41,7 @@ npm run check:upstream
 npm test -- test/upstream/vhs-conformance.test.ts
 VHS_RENDER=1 npm test -- test/upstream/vhs-render.test.ts
 npm run verify
+npm exec -- playwright install chromium
 npm run test:integration
 npm run test:web
 npm run package

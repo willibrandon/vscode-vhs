@@ -129,7 +129,7 @@ describe("development container", () => {
       "@playwright/browser-chromium@1.62.1": true,
       "@vscode/vsce-sign@2.1.0": true,
       "esbuild@0.28.2": true,
-      "sharp@0.35.3": true,
+      "sharp@0.35.4": true,
     });
     for (const command of [
       "npm run check:upstream",
@@ -144,6 +144,7 @@ describe("development container", () => {
     ]) {
       expect(verify).toContain(command);
     }
+    expect(verify).toContain("npm exec -- playwright install chromium");
     expect(verify).toContain("mountpoint --quiet");
     expect(verify).toContain("docker version");
     expect(vitest).toContain('reportsDirectory: "coverage/report"');

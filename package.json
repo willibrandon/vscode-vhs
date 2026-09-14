@@ -318,7 +318,7 @@
     "@playwright/browser-chromium@1.62.1": true,
     "@vscode/vsce-sign@2.1.0": true,
     "esbuild@0.28.2": true,
-    "sharp@0.35.3": true
+    "sharp@0.35.4": true
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
