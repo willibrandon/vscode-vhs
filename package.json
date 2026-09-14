@@ -340,7 +340,7 @@
     "sharp": "0.35.4",
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "typescript-eslint": "8.70.0",
-    "vitest": "4.1.11",
+    "vitest": "5.0.0",
     "vscode-jsonrpc": "9.0.2",
     "vscode-oniguruma": "2.0.1",
     "vscode-textmate": "9.3.2",
