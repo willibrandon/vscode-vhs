@@ -89,6 +89,12 @@ describe("workflow supply-chain policy", () => {
     }
   });
 
+  it("installs the exact Playwright browser before browser-based checks", () => {
+    for (const name of ["ci.yml", "docs.yml", "release.yml"]) {
+      expect(workflow(name), name).toContain("npm exec -- playwright install chromium");
+    }
+  });
+
   it("checks the registry package identity before staging or publishing", () => {
     const ci = workflow("ci.yml");
     const release = workflow("release.yml");
