@@ -300,11 +300,11 @@
     "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run generate:icon && npm run check:icon && npm run build && npm run check:bundles && npm run check:licenses && npm run check:package && npm run audit && npm run audit:signatures"
   },
   "dependencies": {
-    "ignore": "7.0.6",
-    "vscode-languageclient": "10.1.0",
-    "vscode-languageserver": "10.1.0",
-    "vscode-languageserver-textdocument": "1.0.12",
-    "vscode-uri": "3.1.0"
+    "ignore": "7.0.9",
+    "vscode-languageclient": "10.1.1",
+    "vscode-languageserver": "10.1.1",
+    "vscode-languageserver-textdocument": "1.0.14",
+    "vscode-uri": "3.2.0"
   },
   "overrides": {
     "cheerio": "1.0.0-rc.12",
