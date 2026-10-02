@@ -5,16 +5,16 @@ The extension bundles these npm packages:
 | Package                                   | License       | Text                                                                                                    |
 | ----------------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------- |
 | balanced-match@4.0.4                      | MIT           | [balanced-match-4.0.4.txt](LICENSES/balanced-match-4.0.4.txt)                                           |
-| brace-expansion@5.0.9                     | MIT           | [brace-expansion-5.0.9.txt](LICENSES/brace-expansion-5.0.9.txt)                                         |
-| ignore@7.0.9                              | MIT           | [ignore-7.0.9.txt](LICENSES/ignore-7.0.9.txt)                                                           |
+| brace-expansion@5.0.12                    | MIT           | [brace-expansion-5.0.12.txt](LICENSES/brace-expansion-5.0.12.txt)                                       |
+| ignore@7.0.10                             | MIT           | [ignore-7.0.10.txt](LICENSES/ignore-7.0.10.txt)                                                         |
 | minimatch@10.2.6                          | BlueOak-1.0.0 | [minimatch-10.2.6.txt](LICENSES/minimatch-10.2.6.txt)                                                   |
 | semver@7.8.5                              | ISC           | [semver-7.8.5.txt](LICENSES/semver-7.8.5.txt)                                                           |
-| vscode-jsonrpc@9.0.2                      | MIT           | [vscode-jsonrpc-9.0.2.txt](LICENSES/vscode-jsonrpc-9.0.2.txt)                                           |
-| vscode-languageclient@10.1.1              | MIT           | [vscode-languageclient-10.1.1.txt](LICENSES/vscode-languageclient-10.1.1.txt)                           |
-| vscode-languageserver@10.1.1              | MIT           | [vscode-languageserver-10.1.1.txt](LICENSES/vscode-languageserver-10.1.1.txt)                           |
-| vscode-languageserver-protocol@3.18.3     | MIT           | [vscode-languageserver-protocol-3.18.3.txt](LICENSES/vscode-languageserver-protocol-3.18.3.txt)         |
-| vscode-languageserver-textdocument@1.0.14 | MIT           | [vscode-languageserver-textdocument-1.0.14.txt](LICENSES/vscode-languageserver-textdocument-1.0.14.txt) |
-| vscode-languageserver-types@3.18.3        | MIT           | [vscode-languageserver-types-3.18.3.txt](LICENSES/vscode-languageserver-types-3.18.3.txt)               |
+| vscode-jsonrpc@9.0.3                      | MIT           | [vscode-jsonrpc-9.0.3.txt](LICENSES/vscode-jsonrpc-9.0.3.txt)                                           |
+| vscode-languageclient@10.1.2              | MIT           | [vscode-languageclient-10.1.2.txt](LICENSES/vscode-languageclient-10.1.2.txt)                           |
+| vscode-languageserver@10.1.2              | MIT           | [vscode-languageserver-10.1.2.txt](LICENSES/vscode-languageserver-10.1.2.txt)                           |
+| vscode-languageserver-protocol@3.18.4     | MIT           | [vscode-languageserver-protocol-3.18.4.txt](LICENSES/vscode-languageserver-protocol-3.18.4.txt)         |
+| vscode-languageserver-textdocument@1.0.15 | MIT           | [vscode-languageserver-textdocument-1.0.15.txt](LICENSES/vscode-languageserver-textdocument-1.0.15.txt) |
+| vscode-languageserver-types@3.18.4        | MIT           | [vscode-languageserver-types-3.18.4.txt](LICENSES/vscode-languageserver-types-3.18.4.txt)               |
 | vscode-uri@3.2.0                          | MIT           | [vscode-uri-3.2.0.txt](LICENSES/vscode-uri-3.2.0.txt)                                                   |
 
 VHS test fixtures and tree-sitter-vhs corpus fixtures are used for tests only. Both are Copyright
