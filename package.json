@@ -307,6 +307,7 @@
     "vscode-uri": "3.2.0"
   },
   "overrides": {
+    "@vscode/vsce": "4.0.0",
     "cheerio": "1.0.0-rc.12",
     "diff": "8.0.3",
     "glob": "13.0.6",
@@ -318,7 +319,7 @@
     "@playwright/browser-chromium@1.62.1": true,
     "@vscode/vsce-sign@2.1.0": true,
     "esbuild@0.28.2": true,
-    "sharp@0.35.4": true
+    "sharp@0.35.5": true
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -337,7 +338,7 @@
     "playwright": "1.63.0",
     "prettier": "3.9.9",
     "prettier-plugin-astro": "1.1.0",
-    "sharp": "0.35.4",
+    "sharp": "0.35.5",
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "typescript-eslint": "8.70.1",
     "vitest": "5.0.2",

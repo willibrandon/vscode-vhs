@@ -129,7 +129,7 @@ describe("development container", () => {
       "@playwright/browser-chromium@1.62.1": true,
       "@vscode/vsce-sign@2.1.0": true,
       "esbuild@0.28.2": true,
-      "sharp@0.35.4": true,
+      "sharp@0.35.5": true,
     });
     for (const command of [
       "npm run check:upstream",
