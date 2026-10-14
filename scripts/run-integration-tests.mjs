@@ -44,6 +44,7 @@ try {
       "--disable-workspace-trust",
       "--skip-release-notes",
       "--skip-welcome",
+      "--disable-gpu",
       "--user-data-dir=" + userData,
       ...(installedExtensions === undefined ? [] : ["--extensions-dir=" + installedExtensions]),
     ],
