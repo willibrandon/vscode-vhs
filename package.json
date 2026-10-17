@@ -300,7 +300,7 @@
     "verify": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run generate:icon && npm run check:icon && npm run build && npm run check:bundles && npm run check:licenses && npm run check:package && npm run audit && npm run audit:signatures"
   },
   "dependencies": {
-    "ignore": "7.0.10",
+    "ignore": "7.0.12",
     "vscode-languageclient": "10.1.2",
     "vscode-languageserver": "10.1.2",
     "vscode-languageserver-textdocument": "1.0.15",
