@@ -10,7 +10,6 @@ export function clientOptions(output: vscode.LogOutputChannel): LanguageClientOp
     documentSelector: VHS_LANGUAGE_IDS.map((language) => ({ language })),
     markdown: { isTrusted: false },
     outputChannel: output,
-    synchronize: { configurationSection: "vhs" },
   };
 }
 
