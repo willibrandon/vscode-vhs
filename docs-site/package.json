@@ -17,8 +17,8 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "3.7.4",
-    "@astrojs/starlight": "0.42.6",
-    "astro": "7.4.0",
+    "@astrojs/starlight": "0.42.7",
+    "astro": "7.4.2",
     "sharp": "0.35.5"
   },
   "overrides": {
@@ -27,7 +27,7 @@
     "postcss-selector-parser": "7.1.6"
   },
   "devDependencies": {
-    "@astrojs/check": "0.9.10",
+    "@astrojs/check": "0.9.12",
     "typescript": "npm:@typescript/typescript6@6.0.2"
   },
   "allowScripts": {
