@@ -33,7 +33,8 @@ const expectedRuntimePackages = new Map([
   ["balanced-match@4.0.4", "balanced-match-4.0.4.txt"],
   ["brace-expansion@5.0.12", "brace-expansion-5.0.12.txt"],
   ["ignore@7.0.14", "ignore-7.0.14.txt"],
-  ["minimatch@10.2.6", "minimatch-10.2.6.txt"],
+  ["@isaacs/nonrecursive-glob-match@1.0.3", "nonrecursive-glob-match-1.0.3.txt"],
+  ["minimatch@11.0.4", "minimatch-11.0.4.txt"],
   ["semver@7.8.5", "semver-7.8.5.txt"],
   ["vscode-jsonrpc@10.0.0", "vscode-jsonrpc-10.0.0.txt"],
   ["vscode-languageclient@11.0.0", "vscode-languageclient-11.0.0.txt"],
@@ -51,7 +52,11 @@ const expectedLicenseHashes = new Map([
     "9c63a23124d68cd30cd316a94a1a0bca34f032786df6df69fc4b5f136bac8d2e",
   ],
   ["ignore-7.0.14.txt", "9c94db23dc4b1e9aaee5d195668b916afc71efed54af226b66cf0ccc4389c1c0"],
-  ["minimatch-10.2.6.txt", "2c7c5d22ed5a8ee968c64757710979afcd77438c48b4a265b94e615babd8a901"],
+  [
+    "nonrecursive-glob-match-1.0.3.txt",
+    "8a1af140fdfbf5afd3df27f7e662f989c5b963a300020dfafce42033cae9e004",
+  ],
+  ["minimatch-11.0.4.txt", "2c7c5d22ed5a8ee968c64757710979afcd77438c48b4a265b94e615babd8a901"],
   ["semver-7.8.5.txt", "4ec3d4c66cd87f5c8d8ad911b10f99bf27cb00cdfcff82621956e379186b016b"],
   ["vscode-jsonrpc-10.0.0.txt", "ec9ee83580841e8eb687aca9867f221503809ba6426c7f876ede17d91b9fcfd0"],
   [

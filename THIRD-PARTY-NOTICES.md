@@ -7,7 +7,8 @@ The extension bundles these npm packages:
 | balanced-match@4.0.4                      | MIT           | [balanced-match-4.0.4.txt](LICENSES/balanced-match-4.0.4.txt)                                           |
 | brace-expansion@5.0.12                    | MIT           | [brace-expansion-5.0.12.txt](LICENSES/brace-expansion-5.0.12.txt)                                       |
 | ignore@7.0.14                             | MIT           | [ignore-7.0.14.txt](LICENSES/ignore-7.0.14.txt)                                                         |
-| minimatch@10.2.6                          | BlueOak-1.0.0 | [minimatch-10.2.6.txt](LICENSES/minimatch-10.2.6.txt)                                                   |
+| @isaacs/nonrecursive-glob-match@1.0.3     | BlueOak-1.0.0 | [nonrecursive-glob-match-1.0.3.txt](LICENSES/nonrecursive-glob-match-1.0.3.txt)                         |
+| minimatch@11.0.4                          | BlueOak-1.0.0 | [minimatch-11.0.4.txt](LICENSES/minimatch-11.0.4.txt)                                                   |
 | semver@7.8.5                              | ISC           | [semver-7.8.5.txt](LICENSES/semver-7.8.5.txt)                                                           |
 | vscode-jsonrpc@10.0.0                     | MIT           | [vscode-jsonrpc-10.0.0.txt](LICENSES/vscode-jsonrpc-10.0.0.txt)                                         |
 | vscode-languageclient@11.0.0              | MIT           | [vscode-languageclient-11.0.0.txt](LICENSES/vscode-languageclient-11.0.0.txt)                           |
